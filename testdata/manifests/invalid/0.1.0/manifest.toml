@@ -1,0 +1,7 @@
+provides = "invalid"
+version = 0.1.0
+
+[profiles.default]
+deps = [
+            ["bash", ">0.0.0", "an extra val"],
+       ]
