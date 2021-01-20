@@ -1,8 +1,12 @@
 package main
 
 import (
+	_ "log"
+
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	"github.com/hashicorp/go-version"
 	"github.com/pelletier/go-toml"
@@ -29,10 +33,11 @@ func (d InvalidDepError) Error() string {
 }
 
 type Manifest struct {
-	Provides string
-	Version  string
-	Licence  string
-	Tarball  string
+	Provides   string
+	VersionStr string           `toml:"version"`
+	Version    *version.Version `toml:"-"`
+	Licence    string
+	Tarball    string
 
 	Profiles map[string]Profile
 	Commands Commands
@@ -48,17 +53,50 @@ type Commands struct {
 	Install   string
 }
 
+// Manifests returns a slice of all manifests in the pkgDir
+func Manifests() (m []Manifest, err error) {
+	m = make([]Manifest, 0)
+
+	err = filepath.Walk(pkgDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.Name() == "manifest.toml" {
+			man, err := readManifest(path)
+			if err != nil {
+				return err
+			}
+
+			m = append(m, man)
+		}
+
+		return nil
+	})
+
+	return
+}
+
 // ReadManifest takes a package and version, loads the necessary manifest file,
 // Parses, and returns a Manifest for processing
 func ReadManifest(pkg, ver string) (m Manifest, err error) {
 	filename := manifestPath(pkg, ver)
 
+	return readManifest(filename)
+}
+
+func readManifest(filename string) (m Manifest, err error) {
 	d, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return
 	}
 
 	err = toml.Unmarshal(d, &m)
+	if err != nil {
+		return
+	}
+
+	m.Version, err = version.NewVersion(m.VersionStr)
 	if err != nil {
 		return
 	}
