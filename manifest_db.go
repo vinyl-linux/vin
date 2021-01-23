@@ -13,15 +13,15 @@ import (
 var (
 	schema = &memdb.DBSchema{
 		Tables: map[string]*memdb.TableSchema{
-			"package": &memdb.TableSchema{
+			"package": {
 				Name: "package",
 				Indexes: map[string]*memdb.IndexSchema{
-					"id": &memdb.IndexSchema{
+					"id": {
 						Name:    "id",
 						Unique:  true,
 						Indexer: &memdb.StringFieldIndex{Field: "ID"},
 					},
-					"provides": &memdb.IndexSchema{
+					"provides": {
 						Name:    "provides",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "Provides"},
