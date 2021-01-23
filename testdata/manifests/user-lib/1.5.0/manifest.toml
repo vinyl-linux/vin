@@ -1,0 +1,6 @@
+provides = "user-lib"
+version = "1.5.0"
+
+[profiles]
+[profiles.default]    # All manifests need a default profile
+deps = []

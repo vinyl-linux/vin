@@ -1,8 +1,12 @@
 package main
 
 import (
+	_ "log"
+
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 
 	"github.com/hashicorp/go-version"
 	"github.com/pelletier/go-toml"
@@ -28,15 +32,26 @@ func (d InvalidDepError) Error() string {
 	return fmt.Sprintf(`dependency "%s %s" is invalid`, d[0], d[1])
 }
 
+type ManifestByVersion []*Manifest
+
+func (m ManifestByVersion) Len() int           { return len(m) }
+func (m ManifestByVersion) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
+func (m ManifestByVersion) Less(i, j int) bool { return m[i].Version.LessThan(m[j].Version) }
+
 type Manifest struct {
-	Provides string
-	Version  string
-	Licence  string
-	Tarball  string
+	ID string `toml:"-"`
+
+	Provides   string
+	VersionStr string           `toml:"version"`
+	Version    *version.Version `toml:"-"`
+	Licence    string
+	Tarball    string
 
 	Profiles map[string]Profile
 	Commands Commands
 }
+
+func (m Manifest) String() string { return fmt.Sprintf("%s %s", m.Provides, m.VersionStr) }
 
 type Profile struct {
 	Deps []Dep
@@ -48,11 +63,39 @@ type Commands struct {
 	Install   string
 }
 
+// Manifests returns a slice of all manifests in the pkgDir
+func Manifests() (m []*Manifest, err error) {
+	m = make([]*Manifest, 0)
+
+	err = filepath.Walk(pkgDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.Name() == "manifest.toml" {
+			man, err := readManifest(path)
+			if err != nil {
+				return err
+			}
+
+			m = append(m, &man)
+		}
+
+		return nil
+	})
+
+	return
+}
+
 // ReadManifest takes a package and version, loads the necessary manifest file,
 // Parses, and returns a Manifest for processing
 func ReadManifest(pkg, ver string) (m Manifest, err error) {
 	filename := manifestPath(pkg, ver)
 
+	return readManifest(filename)
+}
+
+func readManifest(filename string) (m Manifest, err error) {
 	d, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return
@@ -62,6 +105,13 @@ func ReadManifest(pkg, ver string) (m Manifest, err error) {
 	if err != nil {
 		return
 	}
+
+	m.Version, err = version.NewVersion(m.VersionStr)
+	if err != nil {
+		return
+	}
+
+	m.ID = m.String()
 
 	for _, profile := range m.Profiles {
 		for _, d := range profile.Deps {

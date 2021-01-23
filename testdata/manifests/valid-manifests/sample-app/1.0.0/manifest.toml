@@ -1,0 +1,10 @@
+provides = "sample-app"
+version = "1.0.0"
+
+[profiles]
+[profiles.default]    # All manifests need a default profile
+deps = [
+        ["some-security-library", ">= 1"],
+        ["app-utils", "= 1.0.3"],
+        ["user-lib", "> 1"],
+]
