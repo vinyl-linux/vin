@@ -44,14 +44,55 @@ type Manifest struct {
 	Provides   string
 	VersionStr string           `toml:"version"`
 	Version    *version.Version `toml:"-"`
+	Checksum   string
 	Licence    string
 	Tarball    string
 
 	Profiles map[string]Profile
 	Commands Commands
+
+	// dir comes after download, and signifies the location a package
+	// is extracted to
+	dir string
 }
 
 func (m Manifest) String() string { return fmt.Sprintf("%s %s", m.Provides, m.VersionStr) }
+
+// Prepare accepts a chan to send messages to (for buffering messages when multithreaded) and
+// returns an error.
+//
+// It handles things like downloading and verifying tarballs, and subsequently untarring
+func (m *Manifest) Prepare(messages chan string) (err error) {
+	// This function will download the Manifest Tarball, checksum it, un-tar it, and so on. At some
+	// point we could even think about things like applying optional patches
+
+	// create a tempdir
+	m.dir, err = ioutil.TempDir("", m.Provides)
+	if err != nil {
+		return
+	}
+
+	// download m.Tarball to tempdir/.tarball
+	fn := filepath.Join(m.dir, ".tarball")
+	err = download(fn, m.Tarball)
+	if err != nil {
+		return
+	}
+
+	// generate checksum for tarball
+	sum, err := checksum(fn)
+	if err != nil {
+		return
+	}
+
+	// compare checksum with m.Checksum
+	if m.Checksum != sum {
+		return fmt.Errorf("checksum error: expected %q, downloaded file was %q", m.Checksum, sum)
+	}
+
+	// un-tar tarball
+	return untar(fn, m.dir)
+}
 
 type Profile struct {
 	Deps []Dep
