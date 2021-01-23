@@ -1,16 +1,12 @@
 package main
 
 import (
+	"path/filepath"
 	"reflect"
 	"testing"
 )
 
 func TestReadManifest(t *testing.T) {
-	oldPkgDir := pkgDir
-	defer func() {
-		pkgDir = oldPkgDir
-	}()
-
 	pkgDir = "testdata/manifests"
 
 	for _, test := range []struct {
@@ -26,7 +22,7 @@ func TestReadManifest(t *testing.T) {
 		{"invalid dep", "invalid", "0.1.1", Manifest{ID: "invalid 0.1.1", Provides: "invalid", VersionStr: "0.1.1", Profiles: map[string]Profile{"default": Profile{Deps: []Dep{Dep{"bash", "xxx"}}}}}, true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			received, err := ReadManifest(test.pkg, test.ver)
+			received, err := readManifest(filepath.Join(pkgDir, test.pkg, test.ver, ManifestFilename))
 
 			if err == nil && test.expectError {
 				t.Error("expected error, received none")
