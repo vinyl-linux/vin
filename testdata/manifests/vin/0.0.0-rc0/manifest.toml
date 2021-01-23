@@ -1,0 +1,15 @@
+provides = "vin"
+version = "0.0.0-rc0"
+licence = "BSD3"
+tarball = "https://github.com/vinyl-linux/vin/archive/0.0.0-rc0.tar.gz"
+
+[profiles]
+[profiles.default]    # All manifests need a default profile
+deps = [
+        ["go", ">= 1.12"],
+]
+
+[commands]
+configure = "true"
+compile = "make"
+install = "make install"

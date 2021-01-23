@@ -1,0 +1,6 @@
+provides = "app-utils"
+version = "1.0.2"
+
+[profiles]
+[profiles.default]    # All manifests need a default profile
+deps = []
