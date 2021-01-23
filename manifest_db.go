@@ -62,7 +62,7 @@ func LoadDB() (d ManifestDB, err error) {
 	return
 }
 
-// Satisfies returns a slice of Manifests which satisifes a constraint
+// Satisfies returns a slice of Manifests which satisfies a constraint
 func (d ManifestDB) Satisfies(pkg string, constraint version.Constraints) (s []*Manifest, err error) {
 	s = make([]*Manifest, 0)
 
