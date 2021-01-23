@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	pkgDir = getEnv("PKGROOT", "/etc/vinyl/pkg")
+	pkgDir = getEnv("MANIFESTPATH", "/etc/vinyl/pkg")
 )
 
 func getEnv(key, def string) string {
@@ -26,10 +26,6 @@ func getEnv(key, def string) string {
 	}
 
 	return v
-}
-
-func manifestPath(pkg, ver string) string {
-	return filepath.Join(pkgDir, pkg, ver, ManifestFilename)
 }
 
 // checksum takes a filename, opens it, and generates a Blake3 sum from it

@@ -108,32 +108,26 @@ type Commands struct {
 func Manifests() (m []*Manifest, err error) {
 	m = make([]*Manifest, 0)
 
-	err = filepath.Walk(pkgDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if info.Name() == "manifest.toml" {
-			man, err := readManifest(path)
+	for _, dir := range filepath.SplitList(pkgDir) {
+		err = filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
 
-			m = append(m, &man)
-		}
+			if info.Name() == ManifestFilename {
+				man, err := readManifest(path)
+				if err != nil {
+					return err
+				}
 
-		return nil
-	})
+				m = append(m, &man)
+			}
+
+			return nil
+		})
+	}
 
 	return
-}
-
-// ReadManifest takes a package and version, loads the necessary manifest file,
-// Parses, and returns a Manifest for processing
-func ReadManifest(pkg, ver string) (m Manifest, err error) {
-	filename := manifestPath(pkg, ver)
-
-	return readManifest(filename)
 }
 
 func readManifest(filename string) (m Manifest, err error) {
