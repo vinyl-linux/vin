@@ -19,17 +19,22 @@ func TestManifestDB_Satisfies(t *testing.T) {
 		t.Fatalf("unexpected error: %+v", err)
 	}
 
-	constraint, _ := version.NewConstraint(">= 1.0.8")
-	pkg := "app-utils"
+	constraint, _ := version.NewConstraint(">= 1.0.0")
+	pkg := "sample-app"
 
 	s, err := d.Satisfies(pkg, constraint)
+	t.Logf("%#v", s[0])
+
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
 	}
 
 	if len(s) != 1 {
-		t.Fatalf("expected 1 satisfying manifest, received %d", len(s))
+		t.Errorf("expected 1 satisfying manifest, received %d", len(s))
 	}
 
-	t.Logf("%#v", s)
+	expectID := "sample-app 1.0.0"
+	if s[0].ID != expectID {
+		t.Errorf("expected %q, received %q", expectID, s[0].ID)
+	}
 }

@@ -3,6 +3,9 @@ package main
 import (
 	_ "log"
 
+	"fmt"
+	"sort"
+
 	"github.com/hashicorp/go-memdb"
 	"github.com/hashicorp/go-version"
 )
@@ -16,17 +19,12 @@ var (
 					"id": &memdb.IndexSchema{
 						Name:    "id",
 						Unique:  true,
-						Indexer: &memdb.CompoundIndex{Indexes: []memdb.Indexer{&memdb.StringFieldIndex{Field: "Provides"}, &memdb.StringFieldIndex{Field: "Version"}}},
+						Indexer: &memdb.StringFieldIndex{Field: "ID"},
 					},
 					"provides": &memdb.IndexSchema{
 						Name:    "provides",
 						Unique:  false,
 						Indexer: &memdb.StringFieldIndex{Field: "Provides"},
-					},
-					"version": &memdb.IndexSchema{
-						Name:    "version",
-						Unique:  false,
-						Indexer: &memdb.StringFieldIndex{Field: "Version"},
 					},
 				},
 			},
@@ -51,8 +49,9 @@ func LoadDB() (d ManifestDB, err error) {
 	}
 
 	tx := d.db.Txn(true)
+
 	for _, manifest := range manifests {
-		err = tx.Insert("package", &manifest)
+		err = tx.Insert("package", manifest)
 		if err != nil {
 			return
 		}
@@ -82,6 +81,28 @@ func (d ManifestDB) Satisfies(pkg string, constraint version.Constraints) (s []*
 			s = append(s, m)
 		}
 	}
+
+	return
+}
+
+// Latest version returns the latest version of a Manifest to saitisfy a constraint
+func (d ManifestDB) Latest(pkg string, constraint version.Constraints) (m *Manifest, err error) {
+	//log.Printf("pkg: %+v, constraint: %+v", pkg, constraint)
+
+	satisfiers, err := d.Satisfies(pkg, constraint)
+	if err != nil {
+		return
+	}
+
+	if len(satisfiers) == 0 {
+		err = fmt.Errorf("nothing satisfies %s %s", pkg, constraint.String())
+
+		return
+	}
+
+	sort.Sort(ManifestByVersion(satisfiers))
+
+	m = satisfiers[len(satisfiers)-1]
 
 	return
 }

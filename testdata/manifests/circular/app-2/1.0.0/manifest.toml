@@ -1,0 +1,8 @@
+provides = "app-2"
+version = "1.0.0"
+
+[profiles]
+[profiles.default]    # All manifests need a default profile
+deps = [
+        ["app-3", "> 0"],
+]
