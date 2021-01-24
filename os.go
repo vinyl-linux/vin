@@ -16,7 +16,9 @@ import (
 )
 
 var (
-	pkgDir = getEnv("MANIFESTPATH", "/etc/vinyl/pkg")
+	pkgDir     = getEnv("VIN_PATH", "/etc/vinyl/pkg")
+	configFile = getEnv("VIN_CONFIG", "/etc/vinyl/vin.toml")
+	cacheDir   = getEnv("VIN_CACHE", "/var/cache/vinyl/vin/packages")
 )
 
 func getEnv(key, def string) string {
