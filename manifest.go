@@ -15,6 +15,18 @@ import (
 const (
 	// ManifestFilename is the file at which manifests live
 	ManifestFilename = "manifest.toml"
+
+	// DefaultConfigure is the command used to configure packages
+	// where a configure command is not provided
+	DefaultConfigure = "./configure {{ .ConfigureFlags }}"
+
+	// DefaultCompile is the command used to configure packages
+	// where a configure command is not provided
+	DefaultCompile = "make {{ .MakeOpts }}"
+
+	// DefaultInstall is the command used to configure packages
+	// where a configure command is not provided
+	DefaultInstall = "make install {{ .MakeOpts }}"
 )
 
 type Dep [2]string
@@ -99,9 +111,39 @@ type Profile struct {
 }
 
 type Commands struct {
-	Configure string
-	Compile   string
-	Install   string
+	Configure *string
+	Compile   *string
+	Install   *string
+}
+
+// GetConfigure returns either c.Configure, or the default
+// configure command
+func (c Commands) GetConfigure() string {
+	if c.Configure == nil {
+		return DefaultConfigure
+	}
+
+	return *c.Configure
+}
+
+// GetCompile returns either c.Compile, or the default
+// configure command
+func (c Commands) GetCompile() string {
+	if c.Compile == nil {
+		return DefaultCompile
+	}
+
+	return *c.Compile
+}
+
+// GetInstall returns either c.Install, or the default
+// configure command
+func (c Commands) GetInstall() string {
+	if c.Install == nil {
+		return DefaultInstall
+	}
+
+	return *c.Install
 }
 
 // Manifests returns a slice of all manifests in the pkgDir

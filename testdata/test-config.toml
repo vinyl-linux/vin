@@ -1,0 +1,2 @@
+configureFlags = "--enable-hello-world"
+makeOpts = "-j100"
