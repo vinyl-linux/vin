@@ -66,8 +66,8 @@ func (m *Manifest) Prepare(messages chan string) (err error) {
 	// This function will download the Manifest Tarball, checksum it, un-tar it, and so on. At some
 	// point we could even think about things like applying optional patches
 
-	// create a tempdir
-	m.dir, err = ioutil.TempDir("", m.Provides)
+	m.dir = filepath.Join(cacheDir, m.Provides, m.VersionStr)
+	err = os.MkdirAll(m.dir, 0755)
 	if err != nil {
 		return
 	}

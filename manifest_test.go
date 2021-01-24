@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -41,10 +42,13 @@ func TestReadManifest(t *testing.T) {
 }
 
 func TestManifest_Prepare(t *testing.T) {
+	cacheDir, _ = ioutil.TempDir("", "")
+
 	man := Manifest{
-		Provides: "test-package",
-		Tarball:  "https://github.com/vinyl-linux/vin/archive/0.0.0-rc0.tar.gz",
-		Checksum: "a4569f58346973cdbaaa69cda6c8d712bf824bbee824153ae0692aff54120ab7",
+		Provides:   "test-package",
+		Tarball:    "https://github.com/vinyl-linux/vin/archive/0.0.0-rc0.tar.gz",
+		Checksum:   "a4569f58346973cdbaaa69cda6c8d712bf824bbee824153ae0692aff54120ab7",
+		VersionStr: "0.0.0-rc0",
 	}
 
 	err := man.Prepare(make(chan string, 0))
