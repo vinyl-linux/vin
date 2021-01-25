@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option go_package = "github.com/vinyl-linux/vin/server";
+
+package server;
+
+// InstallSpec contains data pertaining to installing
+// packages.
+//
+// InstallSpec messages are sent via `vin install package [-v 1.0.0]`
+message InstallSpec {
+  string pkg = 1;
+  string version = 2;
+}

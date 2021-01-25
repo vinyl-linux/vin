@@ -22,6 +22,7 @@ var (
 	pkgDir     = getEnv("VIN_PATH", "/etc/vinyl/pkg")
 	configFile = getEnv("VIN_CONFIG", "/etc/vinyl/vin.toml")
 	cacheDir   = getEnv("VIN_CACHE", "/var/cache/vinyl/vin/packages")
+	sockAddr   = getEnv("VIN_SOCKET_ADDR", "/var/run/vin.sock")
 )
 
 // ChanWriter wraps a string channel, and implements the io.Writer

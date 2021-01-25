@@ -97,7 +97,7 @@ func (m Manifest) String() string { return fmt.Sprintf("%s %s", m.Provides, m.Ve
 // returns an error.
 //
 // It handles things like downloading and verifying tarballs, and subsequently untarring
-func (m *Manifest) Prepare(messages chan string) (err error) {
+func (m *Manifest) Prepare(output chan string) (err error) {
 	// This function will download the Manifest Tarball, checksum it, un-tar it, and so on. At some
 	// point we could even think about things like applying optional patches
 
@@ -109,12 +109,16 @@ func (m *Manifest) Prepare(messages chan string) (err error) {
 
 	// download m.Tarball to tempdir/.tarball
 	fn := filepath.Join(m.dir, ".tarball")
+	output <- fmt.Sprintf("%s: downloading %q to %s", m.ID, m.Tarball, fn)
+
 	err = download(fn, m.Tarball)
 	if err != nil {
 		return
 	}
 
 	// generate checksum for tarball
+	output <- fmt.Sprintf("%s: comparing blake3 checksums", m.ID)
+
 	sum, err := checksum(fn)
 	if err != nil {
 		return
@@ -126,6 +130,8 @@ func (m *Manifest) Prepare(messages chan string) (err error) {
 	}
 
 	// un-tar tarball
+	output <- fmt.Sprintf("%s: extracting sources", m.ID)
+
 	return untar(fn, m.dir)
 }
 
@@ -150,6 +156,15 @@ type Commands struct {
 	Configure *string
 	Compile   *string
 	Install   *string
+}
+
+// Slice returns each command in an ordered slice
+func (c Commands) Slice() []string {
+	return []string{
+		c.GetConfigure(),
+		c.GetCompile(),
+		c.GetInstall(),
+	}
 }
 
 // GetConfigure returns either c.Configure, or the default
