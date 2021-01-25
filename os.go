@@ -4,12 +4,15 @@ import (
 	"archive/tar"
 	"compress/bzip2"
 	"compress/gzip"
+	"context"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/h2non/filetype"
 	"github.com/zeebo/blake3"
@@ -20,6 +23,18 @@ var (
 	configFile = getEnv("VIN_CONFIG", "/etc/vinyl/vin.toml")
 	cacheDir   = getEnv("VIN_CACHE", "/var/cache/vinyl/vin/packages")
 )
+
+// ChanWriter wraps a string channel, and implements the io.Writer
+// interface in order to attach it to the Stdout and Stderr of a process
+type ChanWriter chan string
+
+// Write implements the io.Writer interface; it writes p to the underlying
+// channel as a string
+func (cw ChanWriter) Write(p []byte) (n int, err error) {
+	cw <- string(p)
+
+	return len(p), nil
+}
 
 func getEnv(key, def string) string {
 	v, ok := os.LookupEnv(key)
@@ -189,4 +204,28 @@ func decompressLoop(tr *tar.Reader, dest string) (err error) {
 			f.Close()
 		}
 	}
+}
+
+func execute(dir, command string, output chan string) (err error) {
+	cmdSlice := strings.Fields(command)
+
+	var args []string
+
+	switch len(cmdSlice) {
+	case 0:
+		return fmt.Errorf("execute: %q is empty, or cannot be split", command)
+	case 1:
+		// NOP; in this case leave args as empty
+	default:
+		args = cmdSlice[1:len(cmdSlice)]
+	}
+
+	cmd := exec.CommandContext(context.Background(), cmdSlice[0], args...)
+	cmd.Dir = dir
+
+	outputWriter := ChanWriter(output)
+	cmd.Stdout = outputWriter
+	cmd.Stderr = outputWriter
+
+	return cmd.Run()
 }
