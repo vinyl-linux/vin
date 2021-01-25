@@ -38,6 +38,7 @@ jobs:
         github-token: ${{ secrets.github_token }}
         path-to-lcov: coverage.lcov
 
+
   sonarcloud:
     runs-on: ubuntu-latest
     steps:
@@ -45,6 +46,10 @@ jobs:
       with:
         # Disabling shallow clone is recommended for improving relevancy of reporting
         fetch-depth: 0
+
+    - name: Test
+      run: go test -v ./... -covermode=count -coverprofile=coverage.out
+
     - name: SonarCloud Scan
       uses: sonarsource/sonarcloud-github-action@master
       env:
