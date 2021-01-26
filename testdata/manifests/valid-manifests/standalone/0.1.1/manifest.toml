@@ -1,0 +1,13 @@
+provides = "standalone"
+version = "0.1.1"
+tarball = "https://github.com/vinyl-linux/vin/archive/0.0.0-rc0.tar.gz"
+checksum = "bad0checksum"
+
+[commands]
+configure = "./some-bad-command"
+compile = "echo 'skipping'"
+install = "echo 'skipping'"
+
+[profiles]
+[profiles.default]    # All manifests need a default profile
+deps = []
