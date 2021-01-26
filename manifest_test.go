@@ -29,8 +29,12 @@ func TestReadManifest(t *testing.T) {
 
 			if err == nil && test.expectError {
 				t.Error("expected error, received none")
-			} else if err != nil && !test.expectError {
-				t.Errorf("unexpected error: %+v", err)
+			} else if err != nil {
+				if !test.expectError {
+					t.Errorf("unexpected error: %+v", err)
+				} else {
+					t.Logf("received error: %+v", err)
+				}
 			}
 
 			// Remove Version pointer to make testing easier
@@ -65,4 +69,28 @@ func TestManifest_Prepare(t *testing.T) {
 	}
 
 	t.Logf("extract dir: %q", man.dir)
+}
+
+func TestCommands_Slice(t *testing.T) {
+	// Ensure that slice contains user specified commands, where user
+	// specified commands are set
+	configure := "conf.sh"
+	compile := "comp.sh"
+	install := "install.sh"
+
+	c := Commands{
+		Configure: &configure,
+		Compile:   &compile,
+		Install:   &install,
+	}
+
+	cSlice := c.Slice()
+
+	for idx, expect := range []string{configure, compile, install} {
+		t.Run("", func(t *testing.T) {
+			if expect != cSlice[idx] {
+				t.Errorf("expected %q, received %q", expect, cSlice[idx])
+			}
+		})
+	}
 }
