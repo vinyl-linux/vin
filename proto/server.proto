@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "install.proto";
+
+option go_package = "github.com/vinyl-linux/vin/server";
+
+package server;
+
+service Vin {
+  rpc Install(InstallSpec) returns (stream Output) {}
+}
+
+// Output holds lines of text to print/
+// store in a log/
+// slurp/
+// whatever
+message Output {
+  string line = 1;
+}

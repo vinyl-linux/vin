@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -41,6 +42,47 @@ func TestUntar(t *testing.T) {
 				if test.expectSum != sum {
 					t.Errorf("expected %q, received %q", test.expectSum, sum)
 				}
+			}
+		})
+	}
+}
+
+func TestExecute(t *testing.T) {
+	for _, test := range []struct {
+		name        string
+		dir         string
+		command     string
+		expect      string
+		expectError bool
+	}{
+		{"happy path, no output", ".", "true", "", false},
+		{"read file", "testdata", "cat hello-world", "hello, world!\n", false},
+		{"no such command", ".", "ahkjsdhkajshkqrzokhz", "", true},
+		{"good command, bad file", ".", "cat nonsuch.txt", "cat: nonsuch.txt: No such file or directory\n", true},
+		{"empty command", "", "", "", true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			output := make(chan string)
+			outputB := strings.Builder{}
+			go func() {
+				for s := range output {
+					outputB.WriteString(s)
+				}
+			}()
+
+			err := execute(test.dir, test.command, output)
+			close(output)
+			if err == nil && test.expectError {
+				t.Errorf("expected error")
+			}
+
+			if err != nil && !test.expectError {
+				t.Errorf("unexpected error: %+v", err)
+			}
+
+			got := outputB.String()
+			if test.expect != got {
+				t.Errorf("expected %q, received %q", test.expect, got)
 			}
 		})
 	}

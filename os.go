@@ -4,12 +4,15 @@ import (
 	"archive/tar"
 	"compress/bzip2"
 	"compress/gzip"
+	"context"
 	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/h2non/filetype"
 	"github.com/zeebo/blake3"
@@ -19,7 +22,20 @@ var (
 	pkgDir     = getEnv("VIN_PATH", "/etc/vinyl/pkg")
 	configFile = getEnv("VIN_CONFIG", "/etc/vinyl/vin.toml")
 	cacheDir   = getEnv("VIN_CACHE", "/var/cache/vinyl/vin/packages")
+	sockAddr   = getEnv("VIN_SOCKET_ADDR", "/var/run/vin.sock")
 )
+
+// ChanWriter wraps a string channel, and implements the io.Writer
+// interface in order to attach it to the Stdout and Stderr of a process
+type ChanWriter chan string
+
+// Write implements the io.Writer interface; it writes p to the underlying
+// channel as a string
+func (cw ChanWriter) Write(p []byte) (n int, err error) {
+	cw <- string(p)
+
+	return len(p), nil
+}
 
 func getEnv(key, def string) string {
 	v, ok := os.LookupEnv(key)
@@ -86,23 +102,12 @@ func download(fn, url string) (err error) {
 	return
 }
 
-// untar will untar a tarball
-//
-// this solution is, in part, taken from https://medium.com/@skdomino/taring-untaring-files-in-go-6b07cf56bc07
-func untar(fn, dir string) (err error) {
-	// detect filetype
-	var compressorReader io.Reader
-
-	f, err := os.Open(fn)
-	if err != nil {
-		return
-	}
-
-	defer f.Close()
-
+// decompress opens a tarball and decompresses it according to
+// which ever method was used to compress it
+func decompress(data *os.File) (decompressor io.Reader, err error) {
 	// Read header, determine compression method
 	head := make([]byte, 261)
-	f.Read(head)
+	data.Read(head)
 
 	ty, err := filetype.Match(head)
 	if err != nil {
@@ -110,24 +115,50 @@ func untar(fn, dir string) (err error) {
 	}
 
 	// Go back to the start
-	f.Seek(0, os.SEEK_SET)
+	data.Seek(0, os.SEEK_SET)
 
 	switch ty.MIME.Value {
 	case "application/gzip":
-		compressorReader, err = gzip.NewReader(f)
-		defer compressorReader.(*gzip.Reader).Close()
+		decompressor, err = gzip.NewReader(data)
 	case "application/x-bzip2":
-		compressorReader = bzip2.NewReader(f)
+		decompressor = bzip2.NewReader(data)
 	default:
 		err = fmt.Errorf("untar: tarball is of (unsupported) type %q", ty.MIME.Value)
 	}
 
+	return
+}
+
+// untar will untar a tarball
+//
+// this solution is, in part, taken from https://medium.com/@skdomino/taring-untaring-files-in-go-6b07cf56bc07
+func untar(fn, dir string) (err error) {
+	// detect filetype
+	f, err := os.Open(fn)
 	if err != nil {
 		return
 	}
 
-	tr := tar.NewReader(compressorReader)
+	defer f.Close()
 
+	decompressor, err := decompress(f)
+	if err != nil {
+		return
+	}
+
+	switch decompressor.(type) {
+	case *gzip.Reader:
+		defer decompressor.(*gzip.Reader).Close()
+	}
+
+	tr := tar.NewReader(decompressor)
+
+	return decompressLoop(tr, dir)
+}
+
+// decompressLoop iterates over a tar reader until either the tarball is
+// untarred, or an error occurs
+func decompressLoop(tr *tar.Reader, dest string) (err error) {
 	var header *tar.Header
 	for {
 		header, err = tr.Next()
@@ -142,7 +173,7 @@ func untar(fn, dir string) (err error) {
 		}
 
 		// the target location where the dir/file should be created
-		target := filepath.Join(dir, header.Name)
+		target := filepath.Join(dest, header.Name)
 
 		// ensure the parent directory exists in situations where a single file,
 		// with missing toplevel dir, is compressed.
@@ -174,4 +205,28 @@ func untar(fn, dir string) (err error) {
 			f.Close()
 		}
 	}
+}
+
+func execute(dir, command string, output chan string) (err error) {
+	cmdSlice := strings.Fields(command)
+
+	var args []string
+
+	switch len(cmdSlice) {
+	case 0:
+		return fmt.Errorf("execute: %q is empty, or cannot be split", command)
+	case 1:
+		// NOP; in this case leave args as empty
+	default:
+		args = cmdSlice[1:len(cmdSlice)]
+	}
+
+	cmd := exec.CommandContext(context.Background(), cmdSlice[0], args...)
+	cmd.Dir = dir
+
+	outputWriter := ChanWriter(output)
+	cmd.Stdout = outputWriter
+	cmd.Stderr = outputWriter
+
+	return cmd.Run()
 }

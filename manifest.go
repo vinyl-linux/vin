@@ -29,27 +29,49 @@ const (
 	DefaultInstall = "make install {{ .MakeOpts }}"
 )
 
+// Dep represents a dependency tuple.
+//
+// A dependency tuple is characterised as (package, version constraint)
 type Dep [2]string
 
-func (d Dep) Valid() bool                              { return d[0] != "" && d[1] != "" && d.validConstraint() }
-func (d Dep) validConstraint() bool                    { _, err := d.Constraint(); return err == nil }
-func (d Dep) Package() string                          { return d[0] }
+// Valid returns true if a Dep has both fields set
+// and if both fields are 'correct'
+func (d Dep) Valid() bool           { return d[0] != "" && d[1] != "" && d.validConstraint() }
+func (d Dep) validConstraint() bool { _, err := d.Constraint(); return err == nil }
+
+// Package returns the package name for this dependency
+func (d Dep) Package() string { return d[0] }
+
+// Constraint returns a version.Constraints type built from
+// the constraint set in the tuple
 func (d Dep) Constraint() (version.Constraints, error) { return version.NewConstraint(d[1]) }
 
 // InvalidDepError is a wrapper around a Dep purely because adding an Error() func to dep
 // seems confusing, and to allow us to check types later
 type InvalidDepError Dep
 
+// Error implements the `error` interface and is returned when a Dep
+// is invalid in some way
 func (d InvalidDepError) Error() string {
 	return fmt.Sprintf(`dependency "%s %s" is invalid`, d[0], d[1])
 }
 
+// ManifestByVersion implements the sort.Interface interface, in
+// order to sort manifests by version
 type ManifestByVersion []*Manifest
 
-func (m ManifestByVersion) Len() int           { return len(m) }
-func (m ManifestByVersion) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
+// Len returns the length of the Manifest set
+func (m ManifestByVersion) Len() int { return len(m) }
+
+// Swap will swap the position of two Manifests
+func (m ManifestByVersion) Swap(i, j int) { m[i], m[j] = m[j], m[i] }
+
+// Less returns true if m[i] is a lower version that m[j]
 func (m ManifestByVersion) Less(i, j int) bool { return m[i].Version.LessThan(m[j].Version) }
 
+// Manifest represents the config needed to install a package, including
+// build commands, dependencies, sources, versions, and associated funtions
+// that do stuff with those things
 type Manifest struct {
 	ID string `toml:"-"`
 
@@ -68,13 +90,14 @@ type Manifest struct {
 	dir string
 }
 
+// String represents the canonical name of a package as provided by a Manifest
 func (m Manifest) String() string { return fmt.Sprintf("%s %s", m.Provides, m.VersionStr) }
 
 // Prepare accepts a chan to send messages to (for buffering messages when multithreaded) and
 // returns an error.
 //
 // It handles things like downloading and verifying tarballs, and subsequently untarring
-func (m *Manifest) Prepare(messages chan string) (err error) {
+func (m *Manifest) Prepare(output chan string) (err error) {
 	// This function will download the Manifest Tarball, checksum it, un-tar it, and so on. At some
 	// point we could even think about things like applying optional patches
 
@@ -86,12 +109,16 @@ func (m *Manifest) Prepare(messages chan string) (err error) {
 
 	// download m.Tarball to tempdir/.tarball
 	fn := filepath.Join(m.dir, ".tarball")
+	output <- fmt.Sprintf("%s: downloading %q to %s", m.ID, m.Tarball, fn)
+
 	err = download(fn, m.Tarball)
 	if err != nil {
 		return
 	}
 
 	// generate checksum for tarball
+	output <- fmt.Sprintf("%s: comparing blake3 checksums", m.ID)
+
 	sum, err := checksum(fn)
 	if err != nil {
 		return
@@ -103,17 +130,41 @@ func (m *Manifest) Prepare(messages chan string) (err error) {
 	}
 
 	// un-tar tarball
+	output <- fmt.Sprintf("%s: extracting sources", m.ID)
+
 	return untar(fn, m.dir)
 }
 
+// Profile holds a set of dependencies associated with a 'profile'.
+//
+// A 'profile' is a way of splitting dependencies into groups, such
+// as only including GUI dependencies when building X11 apps, or
+// bundling extra packages for larger/ less disk constrained systems
 type Profile struct {
 	Deps []Dep
 }
 
+// Commands provides a set of 'commands' which are used in our three stages:
+//
+//   1. Configuring packages/ apps/ whosits
+//   2. Compiling packages/ binaries
+//   3. Installing the resulting compiled stuff into the filesystem
+//
+// Empty commands receive the default for each item, so use something like `true`
+// where a stage command is not necessary
 type Commands struct {
 	Configure *string
 	Compile   *string
 	Install   *string
+}
+
+// Slice returns each command in an ordered slice
+func (c Commands) Slice() []string {
+	return []string{
+		c.GetConfigure(),
+		c.GetCompile(),
+		c.GetInstall(),
+	}
 }
 
 // GetConfigure returns either c.Configure, or the default
