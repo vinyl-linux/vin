@@ -53,7 +53,13 @@ func TestManifest_Prepare(t *testing.T) {
 		VersionStr: "0.0.0-rc0",
 	}
 
-	err := man.Prepare(make(chan string, 0))
+	output := make(chan string, 0)
+	go func() {
+		for _ = range output {
+		}
+	}()
+
+	err := man.Prepare(output)
 	if err != nil {
 		t.Errorf("unexpected error: %+v", err)
 	}
