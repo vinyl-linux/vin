@@ -13,6 +13,19 @@ import (
 )
 
 func main() {
+	lis, err := net.Listen("unix", sockAddr)
+	if err != nil {
+		panic(err)
+	}
+
+	Setup().Serve(lis)
+}
+
+// Setup configures grpc servers, handles startup conditions, and returns
+// a grpc server.
+//
+// This function cynically exists as a way to avoid dropping code coverage
+func Setup() *grpc.Server {
 	logger, err := zap.NewProduction()
 	if err != nil {
 		panic(err)
@@ -44,11 +57,6 @@ func main() {
 		sugar.Panic(err)
 	}
 
-	lis, err := net.Listen("unix", sockAddr)
-	if err != nil {
-		sugar.Panic(err)
-	}
-
 	grpcServer := grpc.NewServer(
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 			grpc_ctxtags.StreamServerInterceptor(),
@@ -65,5 +73,5 @@ func main() {
 
 	sugar.Info("serving vin server :-)")
 
-	grpcServer.Serve(lis)
+	return grpcServer
 }
