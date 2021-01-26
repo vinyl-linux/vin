@@ -54,6 +54,8 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 
 	// create output chan and iterate over it, sending messages
 	output := make(chan string, 0)
+	defer close(output)
+
 	go dispatchOutput(vs, output)
 
 	var (
@@ -79,8 +81,6 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 			}
 		}
 	}
-
-	close(output)
 
 	return
 }
