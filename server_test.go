@@ -1,8 +1,10 @@
 package main
 
 import (
+	"path/filepath"
 	"testing"
 
+	"github.com/gofrs/uuid"
 	"github.com/vinyl-linux/vin/server"
 	"google.golang.org/grpc"
 )
@@ -34,7 +36,7 @@ func TestServer_Install(t *testing.T) {
 		t.Fatalf("unexpected error: %+v", err)
 	}
 
-	s, err := NewServer(c, mdb)
+	s, err := NewServer(c, mdb, StateDB{})
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
 
@@ -57,6 +59,10 @@ func TestServer_Install(t *testing.T) {
 		{"erroring commands", "standalone", "0.1.0", true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
+			// create an empty statedb
+			stateDB = filepath.Join("tmp", uuid.Must(uuid.NewV4()).String(), "vin-test.db")
+			s.sdb, _ = LoadStateDB()
+
 			is := &server.InstallSpec{
 				Pkg:     test.pkg,
 				Version: test.ver,

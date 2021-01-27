@@ -11,7 +11,9 @@ var (
 )
 
 type Graph struct {
-	mdb            ManifestDB
+	mdb            *ManifestDB
+	sdb            *StateDB
+	output         chan string
 	depConstraints map[string]version.Constraints
 	resolved       map[string]*Manifest
 	seen           map[string]*Manifest
@@ -19,9 +21,11 @@ type Graph struct {
 	level          int
 }
 
-func NewGraph(mdb ManifestDB) *Graph {
+func NewGraph(mdb *ManifestDB, sdb *StateDB, output chan string) *Graph {
 	return &Graph{
 		mdb:            mdb,
+		sdb:            sdb,
+		output:         output,
 		depConstraints: make(map[string]version.Constraints),
 		resolved:       make(map[string]*Manifest),
 		seen:           make(map[string]*Manifest),
@@ -34,7 +38,7 @@ func NewGraph(mdb ManifestDB) *Graph {
 // this ensures that re-forming the graph with smarter constraints wont
 // throw lots of daft errors
 func (g *Graph) restartReset() {
-	fmt.Println("(re)starting dependency graph solution")
+	g.output <- "(re)starting dependency graph solution"
 
 	g.resolved = make(map[string]*Manifest)
 	g.seen = make(map[string]*Manifest)
@@ -88,7 +92,7 @@ func (g *Graph) solve(m *Manifest, profile string) (restart bool, err error) {
 		g.level--
 	}()
 
-	fmt.Printf("resolving %q (%q)\n", m.Provides, m.VersionStr)
+	g.output <- fmt.Sprintf("resolving %q (%q)\n", m.Provides, m.VersionStr)
 
 	g.seen[m.Provides] = m
 

@@ -16,6 +16,7 @@ func TestSetup(t *testing.T) {
 	configFile = "testdata/test-config.toml"
 	cacheDir = "/tmp"
 	sockAddr = "/tmp/vin-test.sock"
+	stateDB = "testdata/vin.db"
 
 	Setup()
 }

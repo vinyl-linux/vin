@@ -50,9 +50,17 @@ func Setup() *grpc.Server {
 	}
 
 	sugar.Info("loaded")
+	sugar.Info("loading state")
+
+	sdb, err := LoadStateDB()
+	if err != nil {
+		sugar.Panic(err)
+	}
+
+	sugar.Info("loaded")
 	sugar.Info("starting server")
 
-	s, err := NewServer(c, mdb)
+	s, err := NewServer(c, mdb, sdb)
 	if err != nil {
 		sugar.Panic(err)
 	}

@@ -20,7 +20,14 @@ func TestGraph_Solve(t *testing.T) {
 		t.Fatalf("unexpected error: %+v", err)
 	}
 
-	g := NewGraph(d)
+	outputChan := make(chan string)
+	defer close(outputChan)
+	go func() {
+		for _ = range outputChan {
+		}
+	}()
+
+	g := NewGraph(&d, &StateDB{}, outputChan)
 
 	for _, test := range []struct {
 		name          string
@@ -84,7 +91,14 @@ func TestGraph_Solve_Circular(t *testing.T) {
 		t.Fatalf("unexpected error: %+v", err)
 	}
 
-	g := NewGraph(d)
+	outputChan := make(chan string)
+	defer close(outputChan)
+	go func() {
+		for _ = range outputChan {
+		}
+	}()
+
+	g := NewGraph(&d, &StateDB{}, outputChan)
 
 	_, err = g.Solve("default", "app-1", nil)
 	if err == nil {
