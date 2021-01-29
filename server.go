@@ -137,11 +137,11 @@ func dispatchOutput(vs server.Vin_InstallServer, output chan string) {
 func installingLine(tasks []*Manifest) string {
 	sb := strings.Builder{}
 
-	sb.WriteString("installing dependencies: \n")
+	sb.WriteString("installing dependencies:")
 	for _, t := range tasks {
+		sb.WriteString("\n")
 		sb.WriteString("\t")
 		sb.WriteString(t.ID)
-		sb.WriteString("\n")
 	}
 
 	return sb.String()

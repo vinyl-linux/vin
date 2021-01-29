@@ -92,7 +92,7 @@ func (g *Graph) solve(m *Manifest, profile string) (restart bool, err error) {
 		g.level--
 	}()
 
-	g.output <- fmt.Sprintf("resolving %q (%q)\n", m.Provides, m.VersionStr)
+	g.output <- fmt.Sprintf("resolving %q (%q)", m.Provides, m.VersionStr)
 
 	g.seen[m.Provides] = m
 
