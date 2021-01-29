@@ -43,14 +43,15 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "client",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+	Use:   "vin",
+	Short: "the vinyl linux package manager",
+	Long: `vin provides package management stuff for vinyl linux
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+It offers:
+  * Speed and extensibility- no mucking around with byzantine package manager configs
+  * Modern tooling- sha and md5 are slow and unwieldly. We've moved on. PGP signing package manifests. Why? Sod it, let git handle it
+  * Low barrier to entry for contributing- why are we mucking about with granting access to servers/ mailing lists to make changes? Github/ gitlab/ gitea/ all of these solve these issues better. Slap a reasonably permissive CLA onto a repo somewhere, and let people do what they do.
+`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
@@ -72,11 +73,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.client.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.vin.yaml)")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -94,7 +91,7 @@ func initConfig() {
 
 		// Search config in home directory with name ".client" (without extension).
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".client")
+		viper.SetConfigName(".vin")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
