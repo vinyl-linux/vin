@@ -234,14 +234,20 @@ func readManifest(filename string) (m Manifest, err error) {
 		return
 	}
 
-	m.Version, err = version.NewVersion(m.VersionStr)
+	return processManifest(m)
+}
+
+func processManifest(m Manifest) (m1 Manifest, err error) {
+	m1 = m
+
+	m1.Version, err = version.NewVersion(m.VersionStr)
 	if err != nil {
 		return
 	}
 
-	m.ID = m.String()
+	m1.ID = m.String()
 
-	for _, profile := range m.Profiles {
+	for _, profile := range m1.Profiles {
 		for _, d := range profile.Deps {
 			if !d.Valid() {
 				err = InvalidDepError(d)

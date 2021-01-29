@@ -23,6 +23,7 @@ var (
 	configFile = getEnv("VIN_CONFIG", "/etc/vinyl/vin.toml")
 	cacheDir   = getEnv("VIN_CACHE", "/var/cache/vinyl/vin/packages")
 	sockAddr   = getEnv("VIN_SOCKET_ADDR", "/var/run/vin.sock")
+	stateDB    = getEnv("VIN_STATE_DB", "/etc/vinyl/vin.db")
 )
 
 // ChanWriter wraps a string channel, and implements the io.Writer
