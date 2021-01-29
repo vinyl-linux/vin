@@ -12,7 +12,7 @@ DIRS := $(BINDIR) \
 	$(PKGDIR)
 
 .PHONY: default
-default: vind
+default: vind vin
 
 $(DIRS):
 	mkdir -vp $@
@@ -25,17 +25,22 @@ server/:
 server/install.pb.go server/server.pb.go server/server_grpc.pb.go: server/
 	protoc --proto_path=proto --go_out=server --go-grpc_out=server --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative install.proto server.proto
 
-vind: server/install.pb.go server/server.pb.go server/server_grpc.pb.go
+vind: *.go server/install.pb.go server/server.pb.go server/server_grpc.pb.go
 	go build -o vind
 
+vin: client/*.go server/install.pb.go server/server.pb.go server/server_grpc.pb.go
+	(cd client && go build -o ../vin)
 
 installCmd     ?= install -m 0750 -o $(OWNER) -Cv
 confInstallCmd ?= install -m 0640 -o $(OWNER) -Cv
 
 .PHONY: install
-install: dirs $(BINDIR)/vind $(ETCDIR)/config.toml
+install: dirs $(BINDIR)/vind $(BINDIR)/vin $(ETCDIR)/config.toml
 
 $(BINDIR)/vind: vind $(BINDIR)
+	$(installCmd) $< $@
+
+$(BINDIR)/vin: vin $(BINDIR)
 	$(installCmd) $< $@
 
 $(ETCDIR)/config.toml: $(ETCDIR)
