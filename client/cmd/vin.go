@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"time"
 
 	vin "github.com/vinyl-linux/vin/server"
@@ -61,7 +62,7 @@ func (c client) install(pkg, version string) (err error) {
 			return
 		}
 
-		fmt.Println(output.Line)
+		fmt.Println(strings.TrimSpace(output.Line))
 	}
 
 	return nil
