@@ -32,8 +32,16 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
+)
+
+var version string
+
+const (
+	eBadConn int = 1 + iota
+	eVinError
 )
 
 // installCmd represents the install command
@@ -43,7 +51,19 @@ var installCmd = &cobra.Command{
 	Long:  `install packages`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("install called %#v\n", args)
+		client, err := newClient(socketAddr)
+		if err != nil {
+			fmt.Printf("error connecting to vin: %s\n", err.Error())
+
+			os.Exit(eBadConn)
+		}
+
+		err = client.install(args[0], version)
+		if err != nil {
+			fmt.Printf("installation error: %s\n", err.Error())
+
+			os.Exit(eVinError)
+		}
 	},
 }
 
@@ -59,5 +79,5 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// installCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	installCmd.Flags().StringP("version", "v", "latest", `Version constraint to install. This command allows strict versions, such as "1.2.3", or loose versions such as ">=1.20, <1.3.5"`)
+	installCmd.Flags().StringVarP(&version, "version", "v", "latest", `Version constraint to install. This command allows strict versions, such as "1.2.3", or loose versions such as ">=1.20, <1.3.5"`)
 }
