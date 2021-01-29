@@ -40,6 +40,7 @@ import (
 )
 
 var cfgFile string
+var socketAddr string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -73,7 +74,12 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
+	viper.SetEnvPrefix("vin")
+	viper.BindEnv("socket_addr")
+	viper.SetDefault("socket_addr", "/var/run/vin.sock")
+
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.vin.yaml)")
+	rootCmd.PersistentFlags().StringVar(&socketAddr, "sock", viper.GetString("socket_addr"), "path to the vin socket file")
 }
 
 // initConfig reads in config file and ENV variables if set.
