@@ -124,6 +124,7 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 	}
 
 	s.sdb.AddWorld(is.Pkg, is.Version)
+	s.sdb.Write()
 
 	return
 }
