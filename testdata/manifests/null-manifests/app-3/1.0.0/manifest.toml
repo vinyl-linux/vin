@@ -1,0 +1,15 @@
+provides = "app-3"
+version = "1.0.0"
+tarball = "https://github.com/vinyl-linux/vin/archive/0.0.0-rc0.tar.gz"
+checksum = "a4569f58346973cdbaaa69cda6c8d712bf824bbee824153ae0692aff54120ab7"
+
+[profiles]
+[profiles.default]
+deps = [
+       ["app-5", ">=0"],
+]
+
+[commands]
+configure = "echo 'skipping'"
+compile = "echo 'skipping'"
+install = "echo 'skipping'"
