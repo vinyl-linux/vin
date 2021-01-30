@@ -108,8 +108,10 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 			return
 		}
 
+		iv := InstallationValues{s.config, task}
+
 		for _, raw := range task.Commands.Slice() {
-			cmd, err = s.config.Expand(raw)
+			cmd, err = iv.Expand(raw)
 			if err != nil {
 				return
 			}

@@ -19,10 +19,10 @@ func TestReadManifest(t *testing.T) {
 		expect      Manifest
 		expectError bool
 	}{
-		{"valid vin manifest", "vin", "0.0.0-rc0", Manifest{ID: "vin 0.0.0-rc0", Provides: "vin", VersionStr: "0.0.0-rc0", Licence: "BSD3", Tarball: "https://github.com/vinyl-linux/vin/archive/0.0.0-rc0.tar.gz", Profiles: map[string]Profile{"default": {Deps: []Dep{{"go", ">= 1.12"}}}}, Commands: Commands{Configure: strP("true"), Compile: strP("make"), Install: strP("make install")}}, false},
+		{"valid vin manifest", "vin", "0.0.0-rc0", Manifest{ID: "vin 0.0.0-rc0", Provides: "vin", VersionStr: "0.0.0-rc0", Licence: "BSD3", Tarball: "https://github.com/vinyl-linux/vin/archive/0.0.0-rc0.tar.gz", ManifestDir: "testdata/manifests/vin/0.0.0-rc0", Profiles: map[string]Profile{"default": {Deps: []Dep{{"go", ">= 1.12"}}}}, Commands: Commands{Configure: strP("true"), Compile: strP("make"), Install: strP("make install")}}, false},
 		{"missing manifest", "unknown", "0", Manifest{}, true},
 		{"invalid manifest", "invalid", "0.1.0", Manifest{}, true},
-		{"invalid dep", "invalid", "0.1.1", Manifest{ID: "invalid 0.1.1", Provides: "invalid", VersionStr: "0.1.1", Profiles: map[string]Profile{"default": {Deps: []Dep{{"bash", "xxx"}}}}}, true},
+		{"invalid dep", "invalid", "0.1.1", Manifest{ID: "invalid 0.1.1", Provides: "invalid", VersionStr: "0.1.1", ManifestDir: "testdata/manifests/invalid/0.1.1", Profiles: map[string]Profile{"default": {Deps: []Dep{{"bash", "xxx"}}}}}, true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			received, err := readManifest(filepath.Join(pkgDir, test.pkg, test.ver, ManifestFilename))

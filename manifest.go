@@ -85,6 +85,10 @@ type Manifest struct {
 	Profiles map[string]Profile
 	Commands Commands
 
+	// ManifestDir holds the directory the manifest was installed from
+	// which is useful for pulling in scripts, configs
+	ManifestDir string `toml:"-"`
+
 	// dir comes after download, and signifies the location a package
 	// is extracted to
 	dir string
@@ -233,6 +237,8 @@ func readManifest(filename string) (m Manifest, err error) {
 	if err != nil {
 		return
 	}
+
+	m.ManifestDir = filepath.Dir(filename)
 
 	return processManifest(m)
 }

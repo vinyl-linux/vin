@@ -35,15 +35,20 @@ func LoadConfig() (c Config, err error) {
 	return
 }
 
+type InstallationValues struct {
+	Config
+	*Manifest
+}
+
 // Expand takes a string (containing an ostensible template) and
-// expands it using Config.
+// expands it using Config and Manifest.
 //
 // What an incredibly comment that was... Okay... we allow for
 // the commands section of a package manifest to be a template, and
 // we grant it access to certain configuration items. This function
 // is where we take that template and turn it into an actual command
 // which can be used
-func (c Config) Expand(s string) (cmd string, err error) {
+func (c InstallationValues) Expand(s string) (cmd string, err error) {
 	b := &strings.Builder{}
 
 	tmpl, err := template.New("cmd").Parse(s)
