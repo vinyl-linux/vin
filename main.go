@@ -2,6 +2,7 @@ package main
 
 import (
 	"net"
+	"os"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
@@ -17,6 +18,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	defer os.Remove(sockAddr)
 
 	Setup().Serve(lis)
 }
