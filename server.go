@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -109,6 +110,7 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 		}
 
 		iv := InstallationValues{s.config, task}
+		workDir := filepath.Join(task.dir, task.Commands.WorkingDir)
 
 		for _, raw := range task.Commands.Slice() {
 			cmd, err = iv.Expand(raw)
@@ -116,7 +118,7 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 				return
 			}
 
-			err = execute(task.dir, cmd, output)
+			err = execute(workDir, cmd, output)
 			if err != nil {
 				return
 			}

@@ -156,10 +156,13 @@ type Profile struct {
 //
 // Empty commands receive the default for each item, so use something like `true`
 // where a stage command is not necessary
+//
+// They also include an optional 'WorkingDir' which is appended to manifest.dir
 type Commands struct {
-	Configure *string
-	Compile   *string
-	Install   *string
+	Configure  *string
+	Compile    *string
+	Install    *string
+	WorkingDir string
 }
 
 // Slice returns each command in an ordered slice
