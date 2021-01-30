@@ -55,7 +55,7 @@ func (c client) install(pkg, version string) (err error) {
 	for {
 		output, err = vic.Recv()
 		if err == io.EOF {
-			return nil
+			break
 		}
 
 		if err != nil {

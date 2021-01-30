@@ -32,17 +32,11 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 )
 
 var version string
-
-const (
-	eBadConn int = 1 + iota
-	eVinError
-)
 
 // installCmd represents the install command
 var installCmd = &cobra.Command{
@@ -50,21 +44,24 @@ var installCmd = &cobra.Command{
 	Short: "install packages",
 	Long:  `install packages`,
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := newClient(socketAddr)
-		if err != nil {
-			fmt.Printf("error connecting to vin: %s\n", err.Error())
 
-			os.Exit(eBadConn)
+		err = errWrap("connecting to vin", err)
+		if err != nil {
+			return err
 		}
 
-		err = client.install(args[0], version)
-		if err != nil {
-			fmt.Printf("installation error: %s\n", err.Error())
-
-			os.Exit(eVinError)
-		}
+		return errWrap("installation", client.install(args[0], version))
 	},
+}
+
+func errWrap(msg string, err error) error {
+	if err != nil {
+		err = fmt.Errorf("%s: %w", msg, err)
+	}
+
+	return err
 }
 
 func init() {

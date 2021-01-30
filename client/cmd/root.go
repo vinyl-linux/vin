@@ -42,17 +42,19 @@ import (
 var cfgFile string
 var socketAddr string
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "vin",
-	Short: "the vinyl linux package manager",
-	Long: `vin provides package management stuff for vinyl linux
+var vinDescription = `vin provides package management stuff for vinyl linux
 
 It offers:
   * Speed and extensibility- no mucking around with byzantine package manager configs
   * Modern tooling- sha and md5 are slow and unwieldly. We've moved on. PGP signing package manifests. Why? Sod it, let git handle it
   * Low barrier to entry for contributing- why are we mucking about with granting access to servers/ mailing lists to make changes? Github/ gitlab/ gitea/ all of these solve these issues better. Slap a reasonably permissive CLA onto a repo somewhere, and let people do what they do.
-`,
+`
+
+// rootCmd represents the base command when called without any subcommands
+var rootCmd = &cobra.Command{
+	Use:   "vin",
+	Short: "the vinyl linux package manager",
+	Long:  vinDescription,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
