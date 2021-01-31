@@ -101,7 +101,7 @@ func TestClient_Install(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			c := client{c: test.client}
 
-			err := c.install(test.pkg, test.ver)
+			err := c.install(test.pkg, test.ver, false)
 			if err == nil && test.expectError {
 				t.Errorf("expected error")
 			} else if err != nil && !test.expectError {

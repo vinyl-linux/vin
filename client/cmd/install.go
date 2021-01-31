@@ -36,14 +36,32 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var version string
+// Flag values
+var (
+	version string
+	force   bool
+)
 
 // installCmd represents the install command
 var installCmd = &cobra.Command{
 	Use:   "install [package name]",
 	Short: "install packages",
 	Long:  `install packages`,
-	Args:  cobra.ExactArgs(1),
+	Args: func(cmd *cobra.Command, args []string) error {
+		argCount := len(args)
+
+		if argCount != 1 {
+			cmd.Usage()
+
+			if argCount == 0 {
+				return fmt.Errorf("missing package")
+			}
+
+			return fmt.Errorf("install requires one package, received %d", argCount)
+		}
+
+		return nil
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := newClient(socketAddr)
 
@@ -52,7 +70,7 @@ var installCmd = &cobra.Command{
 			return err
 		}
 
-		return errWrap("installation", client.install(args[0], version))
+		return errWrap("installation", client.install(args[0], version, force))
 	},
 }
 
@@ -77,4 +95,5 @@ func init() {
 	// is called directly, e.g.:
 	// installCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	installCmd.Flags().StringVarP(&version, "version", "v", "latest", `Version constraint to install. This command allows strict versions, such as "1.2.3", or loose versions such as ">=1.20, <1.3.5"`)
+	installCmd.Flags().BoolVarP(&force, "force", "f", false, "Force installation, even when targets are marked as installed")
 }

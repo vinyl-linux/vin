@@ -11,4 +11,5 @@ package server;
 message InstallSpec {
   string pkg = 1;
   string version = 2;
+  bool force = 3;
 }

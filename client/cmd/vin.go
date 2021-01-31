@@ -37,9 +37,10 @@ func newClient(addr string) (c client, err error) {
 	return
 }
 
-func (c client) install(pkg, version string) (err error) {
+func (c client) install(pkg, version string, force bool) (err error) {
 	is := &vin.InstallSpec{
-		Pkg: pkg,
+		Pkg:   pkg,
+		Force: force,
 	}
 
 	if version != "" && version != "latest" {

@@ -98,7 +98,7 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 
 	// for each pkg
 	for _, task := range tasks {
-		if s.sdb.IsInstalled(task.ID) {
+		if s.sdb.IsInstalled(task.ID) && !is.Force {
 			output <- fmt.Sprintf("%s is already installed, skipping", task.ID)
 
 			continue
