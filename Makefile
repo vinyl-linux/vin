@@ -31,8 +31,8 @@ vind: *.go server/install.pb.go server/server.pb.go server/server_grpc.pb.go
 vin: client/*.go client/**/*.go server/install.pb.go server/server.pb.go server/server_grpc.pb.go
 	(cd client && go build -o ../vin)
 
-installCmd     ?= install -m 0750 -o $(OWNER) -Cv
-confInstallCmd ?= install -m 0640 -o $(OWNER) -Cv
+installCmd     ?= install -m 0750 -o $(OWNER)
+confInstallCmd ?= install -m 0640 -o $(OWNER)
 
 .PHONY: install
 install: dirs $(BINDIR)/vind $(BINDIR)/vin $(ETCDIR)/config.toml
