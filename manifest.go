@@ -85,6 +85,10 @@ type Manifest struct {
 	Profiles map[string]Profile
 	Commands Commands
 
+	// ManifestDir holds the directory the manifest was installed from
+	// which is useful for pulling in scripts, configs
+	ManifestDir string `toml:"-"`
+
 	// dir comes after download, and signifies the location a package
 	// is extracted to
 	dir string
@@ -152,10 +156,13 @@ type Profile struct {
 //
 // Empty commands receive the default for each item, so use something like `true`
 // where a stage command is not necessary
+//
+// They also include an optional 'WorkingDir' which is appended to manifest.dir
 type Commands struct {
-	Configure *string
-	Compile   *string
-	Install   *string
+	Configure  *string
+	Compile    *string
+	Install    *string
+	WorkingDir string
 }
 
 // Slice returns each command in an ordered slice
@@ -233,6 +240,8 @@ func readManifest(filename string) (m Manifest, err error) {
 	if err != nil {
 		return
 	}
+
+	m.ManifestDir = filepath.Dir(filename)
 
 	return processManifest(m)
 }

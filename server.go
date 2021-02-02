@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -97,7 +98,7 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 
 	// for each pkg
 	for _, task := range tasks {
-		if s.sdb.IsInstalled(task.ID) {
+		if s.sdb.IsInstalled(task.ID) && !is.Force {
 			output <- fmt.Sprintf("%s is already installed, skipping", task.ID)
 
 			continue
@@ -108,13 +109,16 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 			return
 		}
 
+		iv := InstallationValues{s.config, task}
+		workDir := filepath.Join(task.dir, task.Commands.WorkingDir)
+
 		for _, raw := range task.Commands.Slice() {
-			cmd, err = s.config.Expand(raw)
+			cmd, err = iv.Expand(raw)
 			if err != nil {
 				return
 			}
 
-			err = execute(task.dir, cmd, output)
+			err = execute(workDir, cmd, output)
 			if err != nil {
 				return
 			}

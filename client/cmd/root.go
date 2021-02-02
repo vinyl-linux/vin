@@ -52,9 +52,10 @@ It offers:
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "vin",
-	Short: "the vinyl linux package manager",
-	Long:  vinDescription,
+	Use:          "vin",
+	Short:        "the vinyl linux package manager",
+	Long:         vinDescription,
+	SilenceUsage: true,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	//	Run: func(cmd *cobra.Command, args []string) { },
@@ -64,7 +65,6 @@ var rootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
 		os.Exit(1)
 	}
 }
