@@ -3,13 +3,15 @@ BINDIR ?= "$(PREFIX)/usr/bin"
 ETCDIR ?= "$(PREFIX)/etc/vinyl"
 CACHEDIR ?= "$(PREFIX)/var/cache/vinyl/vin"
 PKGDIR ?= "$(ETCDIR)/pkg"
+SRVDIR ?= "$(PREFIX)/etc/s6/sv/vind"
 
 OWNER ?= "root"
 
-DIRS := $(BINDIR) \
-	$(ETCDIR) \
+DIRS := $(BINDIR)   \
+	$(ETCDIR)   \
 	$(CACHEDIR) \
-	$(PKGDIR)
+	$(PKGDIR)   \
+	$(SRVDIR)
 
 .PHONY: default
 default: vind vin
@@ -35,7 +37,7 @@ installCmd     ?= install -m 0750 -o $(OWNER)
 confInstallCmd ?= install -m 0640 -o $(OWNER)
 
 .PHONY: install
-install: dirs $(BINDIR)/vind $(BINDIR)/vin $(ETCDIR)/config.toml
+install: dirs $(BINDIR)/vind $(BINDIR)/vin $(ETCDIR)/config.toml $(SRVDIR)/run $(SRVDIR)/finish $(SRVDIR)/type $(SRVDIR)/conf
 
 $(BINDIR)/vind: vind $(BINDIR)
 	$(installCmd) $< $@
@@ -45,3 +47,6 @@ $(BINDIR)/vin: vin $(BINDIR)
 
 $(ETCDIR)/config.toml: $(ETCDIR)
 	$(confInstallCmd) /dev/null $@
+
+$(SRVDIR)/%: service/% $(SRVDIR)
+	$(installCmd) $< $@
