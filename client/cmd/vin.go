@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -20,8 +21,13 @@ func newClient(addr string) (c client, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
+	resolvedAddr, err := filepath.EvalSymlinks(addr)
+	if err != nil {
+		return
+	}
+
 	conn, err := grpc.DialContext(ctx,
-		addr,
+		resolvedAddr,
 		grpc.WithBlock(),
 		grpc.WithInsecure(),
 		grpc.WithDialer(func(addr string, timeout time.Duration) (net.Conn, error) {

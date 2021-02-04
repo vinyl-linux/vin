@@ -120,3 +120,10 @@ func TestClient_Install(t *testing.T) {
 		})
 	}
 }
+
+func TestNewClient_NoSock(t *testing.T) {
+	_, err := newClient("/no/such/file")
+	if err == nil {
+		t.Errorf("expected error")
+	}
+}
