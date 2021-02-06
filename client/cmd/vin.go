@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"time"
@@ -21,7 +22,7 @@ func newClient(addr string) (c client, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	resolvedAddr, err := filepath.EvalSymlinks(addr)
+	resolvedAddr, err := parseAddr(addr)
 	if err != nil {
 		return
 	}
@@ -41,6 +42,24 @@ func newClient(addr string) (c client, err error) {
 	c.c = vin.NewVinClient(conn)
 
 	return
+}
+
+func parseAddr(addr string) (s string, err error) {
+	u, err := url.Parse(addr)
+	if err != nil {
+		return
+	}
+
+	if u.Scheme == "unix" {
+		p := u.Path
+
+		u.Path, err = filepath.EvalSymlinks(p)
+		if err != nil {
+			return
+		}
+	}
+
+	return u.String(), nil
 }
 
 func (c client) install(pkg, version string, force bool) (err error) {
