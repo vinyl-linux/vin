@@ -37,7 +37,7 @@ installCmd     ?= install -m 0750 -o $(OWNER)
 confInstallCmd ?= install -m 0640 -o $(OWNER)
 
 .PHONY: install
-install: dirs $(BINDIR)/vind $(BINDIR)/vin $(ETCDIR)/config.toml $(SRVDIR)/run $(SRVDIR)/finish $(SRVDIR)/type $(SRVDIR)/conf
+install: dirs $(BINDIR)/vind $(BINDIR)/vin $(ETCDIR)/vin.toml $(SRVDIR)/run $(SRVDIR)/finish $(SRVDIR)/type $(SRVDIR)/conf
 
 $(BINDIR)/vind: vind $(BINDIR)
 	$(installCmd) $< $@
@@ -45,7 +45,7 @@ $(BINDIR)/vind: vind $(BINDIR)
 $(BINDIR)/vin: vin $(BINDIR)
 	$(installCmd) $< $@
 
-$(ETCDIR)/config.toml: $(ETCDIR)
+$(ETCDIR)/vin.toml: $(ETCDIR)
 	$(confInstallCmd) /dev/null $@
 
 $(SRVDIR)/%: service/% $(SRVDIR)
