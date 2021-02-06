@@ -28,10 +28,10 @@ server/install.pb.go server/server.pb.go server/server_grpc.pb.go: server/ **/*.
 	protoc --proto_path=proto --go_out=server --go-grpc_out=server --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative install.proto server.proto
 
 vind: *.go server/install.pb.go server/server.pb.go server/server_grpc.pb.go
-	go build -o vind
+	CGO_ENABLED=0 go build -o vind
 
 vin: client/*.go client/**/*.go server/install.pb.go server/server.pb.go server/server_grpc.pb.go
-	(cd client && go build -o ../vin)
+	(cd client && CGO_ENABLED=0 go build -o ../vin)
 
 installCmd     ?= install -m 0750 -o $(OWNER)
 confInstallCmd ?= install -m 0640 -o $(OWNER)
