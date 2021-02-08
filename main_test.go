@@ -4,6 +4,17 @@ import (
 	"testing"
 )
 
+func TestMain(t *testing.T) {
+	defer func() {
+		err := recover()
+		if err == nil {
+			t.Errorf("expected panic")
+		}
+	}()
+
+	main()
+}
+
 func TestSetup(t *testing.T) {
 	defer func() {
 		err := recover()

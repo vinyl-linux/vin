@@ -3,13 +3,31 @@ BINDIR ?= "$(PREFIX)/usr/bin"
 ETCDIR ?= "$(PREFIX)/etc/vinyl"
 CACHEDIR ?= "$(PREFIX)/var/cache/vinyl/vin"
 PKGDIR ?= "$(ETCDIR)/pkg"
+SRVDIR ?= "$(PREFIX)/etc/s6/sv/vind"
 
 OWNER ?= "root"
 
-DIRS := $(BINDIR) \
-	$(ETCDIR) \
-	$(CACHEDIR) \
-	$(PKGDIR)
+DIRS := $(BINDIR)     \
+	$(ETCDIR)     \
+	$(CACHEDIR)   \
+	$(PKGDIR)     \
+	$(SRVDIR)     \
+	$(SRVDIR)/log \
+	$(SRVDIR)/env
+
+BINARIES := $(BINDIR)/vind \
+	    $(BINDIR)/vin
+
+CONFIGS := $(ETCDIR)/vin.toml
+
+SERVICES := $(SRVDIR)/run      \
+	    $(SRVDIR)/finish   \
+	    $(SRVDIR)/type     \
+	    $(SRVDIR)/conf     \
+	    $(SRVDIR)/log/run  \
+	    $(SRVDIR)/env/HOME \
+	    $(SRVDIR)/env/VIN_SOCKET_ADDR
+
 
 .PHONY: default
 default: vind vin
@@ -26,22 +44,22 @@ server/install.pb.go server/server.pb.go server/server_grpc.pb.go: server/ **/*.
 	protoc --proto_path=proto --go_out=server --go-grpc_out=server --go_opt=paths=source_relative --go-grpc_opt=paths=source_relative install.proto server.proto
 
 vind: *.go server/install.pb.go server/server.pb.go server/server_grpc.pb.go
-	go build -o vind
+	CGO_ENABLED=0 go build -o vind
 
 vin: client/*.go client/**/*.go server/install.pb.go server/server.pb.go server/server_grpc.pb.go
-	(cd client && go build -o ../vin)
+	(cd client && CGO_ENABLED=0 go build -o ../vin)
 
 installCmd     ?= install -m 0750 -o $(OWNER)
 confInstallCmd ?= install -m 0640 -o $(OWNER)
 
 .PHONY: install
-install: dirs $(BINDIR)/vind $(BINDIR)/vin $(ETCDIR)/config.toml
+install: dirs $(BINARIES) $(CONFIGS) $(SERVICES)
 
-$(BINDIR)/vind: vind $(BINDIR)
+$(BINDIR)/%: % $(BINDIR)
 	$(installCmd) $< $@
 
-$(BINDIR)/vin: vin $(BINDIR)
-	$(installCmd) $< $@
-
-$(ETCDIR)/config.toml: $(ETCDIR)
+$(ETCDIR)/%: $(ETCDIR)
 	$(confInstallCmd) /dev/null $@
+
+$(SRVDIR)/%: service/% $(SRVDIR)
+	$(installCmd) $< $@

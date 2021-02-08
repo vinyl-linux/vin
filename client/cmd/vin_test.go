@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"reflect"
 	"testing"
 
@@ -119,4 +122,73 @@ func TestClient_Install(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestNewClient_NoSock(t *testing.T) {
+	_, err := newClient("/no/such/file")
+	if err == nil {
+		t.Errorf("expected error")
+	}
+}
+
+func TestParseAddr(t *testing.T) {
+	emptySock, emptyAlsoSock, err := setupParseAddr()
+	if err != nil {
+		t.Fatalf("setup: %#v", err)
+	}
+
+	for _, test := range []struct {
+		name        string
+		addr        string
+		expect      string
+		expectError bool
+	}{
+		{"Unix scheme, file exists", emptySock, emptySock, false},
+		{"Unix scheme, file is symlink", emptyAlsoSock, emptySock, false},
+		{"Missing file", "unix://./testdata/non-such.sock", "", true},
+		{"HTTPS scheme", "https://example.com", "https://example.com", false},
+		{"Malformed URI", "/tmp/vind.sock\n", "", true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := parseAddr(test.addr)
+			if err == nil && test.expectError {
+				t.Errorf("expected error")
+			} else if err != nil && !test.expectError {
+				t.Errorf("unexpected error %#v", err)
+			}
+
+			if test.expect != got {
+				t.Errorf("expected\n%q\nreceived\n%q", test.expect, got)
+			}
+		})
+	}
+}
+
+// create empty.sock as an empty file
+// create emptyAlsoSock as a symlink from empty-also.sock -> empty.sock
+func setupParseAddr() (emptySock, emptyAlsoSock string, err error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return
+	}
+
+	dir, err := ioutil.TempDir(filepath.Join(cwd, "testdata/tmp"), "")
+	if err != nil {
+		return
+	}
+
+	emptySockRaw := filepath.Join(dir, "empty.sock")
+	emptySock = fmt.Sprintf("unix://%s", emptySockRaw)
+
+	emptyAlsoSockRaw := filepath.Join(dir, "empty-also.sock")
+	emptyAlsoSock = fmt.Sprintf("unix://%s", emptyAlsoSockRaw)
+
+	err = ioutil.WriteFile(emptySockRaw, []byte{}, 0644)
+	if err != nil {
+		return
+	}
+
+	err = os.Symlink(emptySockRaw, emptyAlsoSockRaw)
+
+	return
 }

@@ -14,14 +14,14 @@ import (
 )
 
 func main() {
+	defer os.Remove(sockAddr)
+
 	lis, err := net.Listen("unix", sockAddr)
 	if err != nil {
 		panic(err)
 	}
 
-	defer os.Remove(sockAddr)
-
-	Setup().Serve(lis)
+	panic(Setup().Serve(lis))
 }
 
 // Setup configures grpc servers, handles startup conditions, and returns
