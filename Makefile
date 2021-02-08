@@ -7,11 +7,27 @@ SRVDIR ?= "$(PREFIX)/etc/s6/sv/vind"
 
 OWNER ?= "root"
 
-DIRS := $(BINDIR)   \
-	$(ETCDIR)   \
-	$(CACHEDIR) \
-	$(PKGDIR)   \
-	$(SRVDIR)
+DIRS := $(BINDIR)     \
+	$(ETCDIR)     \
+	$(CACHEDIR)   \
+	$(PKGDIR)     \
+	$(SRVDIR)     \
+	$(SRVDIR)/log \
+	$(SRVDIR)/env
+
+BINARIES := $(BINDIR)/vind \
+	    $(BINDIR)/vin
+
+CONFIGS := $(ETCDIR)/vin.toml
+
+SERVICES := $(SRVDIR)/run      \
+	    $(SRVDIR)/finish   \
+	    $(SRVDIR)/type     \
+	    $(SRVDIR)/conf     \
+	    $(SRVDIR)/log/run  \
+	    $(SRVDIR)/env/HOME \
+	    $(SRVDIR)/env/VIN_SOCKET_ADDR
+
 
 .PHONY: default
 default: vind vin
@@ -37,15 +53,12 @@ installCmd     ?= install -m 0750 -o $(OWNER)
 confInstallCmd ?= install -m 0640 -o $(OWNER)
 
 .PHONY: install
-install: dirs $(BINDIR)/vind $(BINDIR)/vin $(ETCDIR)/vin.toml $(SRVDIR)/run $(SRVDIR)/finish $(SRVDIR)/type $(SRVDIR)/conf
+install: dirs $(BINARIES) $(CONFIGS) $(SERVICES)
 
-$(BINDIR)/vind: vind $(BINDIR)
+$(BINDIR)/%: % $(BINDIR)
 	$(installCmd) $< $@
 
-$(BINDIR)/vin: vin $(BINDIR)
-	$(installCmd) $< $@
-
-$(ETCDIR)/vin.toml: $(ETCDIR)
+$(ETCDIR)/%: $(ETCDIR)
 	$(confInstallCmd) /dev/null $@
 
 $(SRVDIR)/%: service/% $(SRVDIR)
