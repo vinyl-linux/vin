@@ -14,12 +14,12 @@ import (
 )
 
 func main() {
+	defer os.Remove(sockAddr)
+
 	lis, err := net.Listen("unix", sockAddr)
 	if err != nil {
 		panic(err)
 	}
-
-	defer os.Remove(sockAddr)
 
 	panic(Setup().Serve(lis))
 }
