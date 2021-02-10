@@ -4,6 +4,7 @@ ETCDIR ?= "$(PREFIX)/etc/vinyl"
 CACHEDIR ?= "$(PREFIX)/var/cache/vinyl/vin"
 PKGDIR ?= "$(ETCDIR)/pkg"
 SRVDIR ?= "$(PREFIX)/etc/s6/sv/vind"
+LOGDIR ?= "$(PREFIX)/var/log/vind"
 
 OWNER ?= "root"
 
@@ -13,7 +14,8 @@ DIRS := $(BINDIR)     \
 	$(PKGDIR)     \
 	$(SRVDIR)     \
 	$(SRVDIR)/log \
-	$(SRVDIR)/env
+	$(SRVDIR)/env \
+	$(LOGDIR)
 
 BINARIES := $(BINDIR)/vind \
 	    $(BINDIR)/vin
