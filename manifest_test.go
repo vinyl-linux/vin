@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
@@ -19,10 +20,11 @@ func TestReadManifest(t *testing.T) {
 		expect      Manifest
 		expectError bool
 	}{
-		{"valid vin manifest", "vin", "0.0.0-rc0", Manifest{ID: "vin 0.0.0-rc0", Provides: "vin", VersionStr: "0.0.0-rc0", Licence: "BSD3", Tarball: "https://github.com/vinyl-linux/vin/archive/0.0.0-rc0.tar.gz", ManifestDir: "testdata/manifests/vin/0.0.0-rc0", Profiles: map[string]Profile{"default": {Deps: []Dep{{"go", ">= 1.12"}}}}, Commands: Commands{Configure: strP("true"), Compile: strP("make"), Install: strP("make install")}}, false},
+		{"valid vin manifest", "vin", "0.0.0-rc0", Manifest{ID: "vin 0.0.0-rc0", Provides: "vin", VersionStr: "0.0.0-rc0", Licence: "BSD3", Tarball: "https://github.com/vinyl-linux/vin/archive/0.0.0-rc0.tar.gz", ManifestDir: "testdata/manifests/vin/0.0.0-rc0", Profiles: map[string]Profile{"default": {Deps: []Dep{{"go", ">= 1.12"}}}}, Commands: Commands{Configure: strP("true"), Compile: strP("make"), Install: strP("make install"), Patches: []string(nil)}}, false},
 		{"missing manifest", "unknown", "0", Manifest{}, true},
 		{"invalid manifest", "invalid", "0.1.0", Manifest{}, true},
-		{"invalid dep", "invalid", "0.1.1", Manifest{ID: "invalid 0.1.1", Provides: "invalid", VersionStr: "0.1.1", ManifestDir: "testdata/manifests/invalid/0.1.1", Profiles: map[string]Profile{"default": {Deps: []Dep{{"bash", "xxx"}}}}}, true},
+		{"invalid dep", "invalid", "0.1.1", Manifest{ID: "invalid 0.1.1", Provides: "invalid", VersionStr: "0.1.1", ManifestDir: "testdata/manifests/invalid/0.1.1", Profiles: map[string]Profile{"default": {Deps: []Dep{{"bash", "xxx"}}}}, Commands: Commands{Patches: []string(nil)}}, true},
+		{"manifest with patches", "patched", "0.0.1", Manifest{ID: "patched 0.0.1", Provides: "patched", VersionStr: "0.0.1", ManifestDir: "testdata/manifests/patched/0.0.1", Commands: Commands{Patches: []string{"testdata/manifests/patched/0.0.1/0.patch"}}}, false},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			received, err := readManifest(filepath.Join(pkgDir, test.pkg, test.ver, ManifestFilename))
@@ -91,6 +93,52 @@ func TestCommands_Slice(t *testing.T) {
 			if expect != cSlice[idx] {
 				t.Errorf("expected %q, received %q", expect, cSlice[idx])
 			}
+		})
+	}
+}
+
+func TestCommands_Patch(t *testing.T) {
+	sources, err := ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatalf("unexpected error: %#v", err)
+	}
+
+	err = ioutil.WriteFile(filepath.Join(sources, "main.go"), []byte("package main\n"), 0600)
+	if err != nil {
+		t.Fatalf("unexpected error: %#v", err)
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("unexpected error: %#v", err)
+	}
+
+	testdata := filepath.Join(wd, "testdata")
+
+	for _, test := range []struct {
+		name        string
+		commands    Commands
+		expectError bool
+	}{
+		{"Simple commands, no patches", Commands{}, false},
+		{"Happy path, valid patch", Commands{Patches: []string{filepath.Join(testdata, "test.patch")}}, false},
+		{"Broken patch", Commands{Patches: []string{filepath.Join(testdata, "broken.patch")}}, true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			output := make(chan string, 0)
+			go func() {
+				for m := range output {
+					t.Log(m)
+				}
+			}()
+
+			err = test.commands.Patch(sources, output)
+			if !test.expectError && err != nil {
+				t.Errorf("unexpected error: %+v", err)
+			} else if test.expectError && err == nil {
+				t.Errorf("expected error, received none")
+			}
+
 		})
 	}
 }
