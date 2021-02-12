@@ -1,0 +1,5 @@
+provides = "patched"
+version = "0.0.1"
+
+[commands]
+patches = ["0.patch"]

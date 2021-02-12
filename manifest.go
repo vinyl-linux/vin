@@ -163,6 +163,7 @@ type Commands struct {
 	Compile    *string
 	Install    *string
 	WorkingDir string
+	Patches    []string
 }
 
 // Slice returns each command in an ordered slice
@@ -204,6 +205,35 @@ func (c Commands) GetInstall() string {
 	return *c.Install
 }
 
+// Patch runs through the patches configured in the manifest,
+// applying them to the build.
+//
+// It accepts an output chan, in much the same way as Manifest.Prepare,
+// and a working dir (which is set in Server.Install)
+func (c Commands) Patch(wd string, output chan string) (err error) {
+	if len(c.Patches) == 0 {
+		return
+	}
+
+	patches := len(c.Patches)
+	output <- fmt.Sprintf("applying %d patches", patches)
+
+	for i, p := range c.Patches {
+		// These patches should be full paths at this point, since
+		// processManifest has run and joined/cleaned them with
+		// the manifest dir
+		patchCmd := fmt.Sprintf("patch -p1 -i %s", p)
+
+		output <- fmt.Sprintf("patch %d/%d", i+1, patches)
+		err = execute(wd, patchCmd, output)
+		if err != nil {
+			return
+		}
+	}
+
+	return
+}
+
 // Manifests returns a slice of all manifests in the pkgDir
 func Manifests() (m []*Manifest, err error) {
 	m = make([]*Manifest, 0)
@@ -236,6 +266,8 @@ func readManifest(filename string) (m Manifest, err error) {
 		return
 	}
 
+	//m.Commands.Patches = make([]string, 0)
+
 	err = toml.Unmarshal(d, &m)
 	if err != nil {
 		return
@@ -264,6 +296,11 @@ func processManifest(m Manifest) (m1 Manifest, err error) {
 				return
 			}
 		}
+	}
+
+	// make patch paths absolute, in relation to the manifest dir
+	for idx, p := range m1.Commands.Patches {
+		m1.Commands.Patches[idx] = filepath.Join(m.ManifestDir, p)
 	}
 
 	return
