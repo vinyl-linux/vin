@@ -112,6 +112,11 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 		iv := InstallationValues{s.config, task}
 		workDir := filepath.Join(task.dir, task.Commands.WorkingDir)
 
+		err = task.Commands.Patch(workDir, output)
+		if err != nil {
+			return
+		}
+
 		for _, raw := range task.Commands.Slice() {
 			cmd, err = iv.Expand(raw)
 			if err != nil {
