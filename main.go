@@ -13,15 +13,33 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+var (
+	logger *zap.Logger
+	sugar  *zap.SugaredLogger
+)
+
+func init() {
+	var err error
+
+	if logger == nil {
+		logger, err = zap.NewProduction()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	sugar = logger.Sugar()
+}
+
 func main() {
 	defer os.Remove(sockAddr)
 
 	lis, err := net.Listen("unix", sockAddr)
 	if err != nil {
-		panic(err)
+		sugar.Panic(err)
 	}
 
-	panic(Setup().Serve(lis))
+	sugar.Panic(Setup().Serve(lis))
 }
 
 // Setup configures grpc servers, handles startup conditions, and returns
@@ -29,13 +47,6 @@ func main() {
 //
 // This function cynically exists as a way to avoid dropping code coverage
 func Setup() *grpc.Server {
-	logger, err := zap.NewProduction()
-	if err != nil {
-		panic(err)
-	}
-
-	sugar := logger.Sugar()
-
 	sugar.Info("starting")
 	sugar.Info("loading config")
 

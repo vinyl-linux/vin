@@ -56,6 +56,10 @@ func (s *Server) getOpsLock(sender server.OutputSender) {
 }
 
 func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (err error) {
+	if is.Pkg == "" {
+		return fmt.Errorf("package must not be empty")
+	}
+
 	// find root manifest
 	vs.Send(&server.Output{
 		Line: fmt.Sprintf("installing %s", is.Pkg),

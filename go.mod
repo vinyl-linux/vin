@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/gofrs/uuid v4.0.0+incompatible
+	github.com/google/gofuzz v1.2.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2
 	github.com/h2non/filetype v1.1.1
 	github.com/hashicorp/go-memdb v1.3.0
