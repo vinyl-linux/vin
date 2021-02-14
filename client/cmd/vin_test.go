@@ -13,6 +13,7 @@ import (
 	vin "github.com/vinyl-linux/vin/server"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 // all output streams have the same signature
@@ -43,6 +44,22 @@ type dummyInstallClient struct {
 // Install(ctx context.Context, in *InstallSpec, opts ...grpc.CallOption) (Vin_InstallClient, error)
 func (c *dummyInstallClient) Install(_ context.Context, is *vin.InstallSpec, _ ...grpc.CallOption) (vic vin.Vin_InstallClient, err error) {
 	c.is = is
+	if c.output == nil {
+		c.output = make([]string, 0)
+	}
+
+	c.outputPos = 0
+
+	if c.err {
+		err = fmt.Errorf("an error")
+
+		return
+	}
+
+	return c, nil
+}
+
+func (c *dummyInstallClient) Reload(_ context.Context, _ *emptypb.Empty, _ ...grpc.CallOption) (vic vin.Vin_ReloadClient, err error) {
 	if c.output == nil {
 		c.output = make([]string, 0)
 	}
@@ -191,4 +208,32 @@ func setupParseAddr() (emptySock, emptyAlsoSock string, err error) {
 	err = os.Symlink(emptySockRaw, emptyAlsoSockRaw)
 
 	return
+}
+
+func TestClient_Reload(t *testing.T) {
+	for _, test := range []struct {
+		name         string
+		client       DummyVinClient
+		expectOutput []string
+		expectError  bool
+	}{
+		{"happy path", &dummyInstallClient{}, []string{}, false},
+		{"reload fails", &dummyInstallClient{err: true}, []string{}, true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			c := client{c: test.client}
+
+			err := c.reload()
+			if err == nil && test.expectError {
+				t.Errorf("expected error")
+			} else if err != nil && !test.expectError {
+				t.Errorf("unexpected error %#v", err)
+			}
+
+			output := test.client.getOutput()
+			if !reflect.DeepEqual(test.expectOutput, output) {
+				t.Errorf("expected %v, received %v", test.expectOutput, output)
+			}
+		})
+	}
 }

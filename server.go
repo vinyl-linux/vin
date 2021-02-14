@@ -16,10 +16,6 @@ const (
 	DefaultProfile = "default"
 )
 
-type OutputSender interface {
-	Send(m *server.Output) error
-}
-
 type Server struct {
 	server.UnimplementedVinServer
 
@@ -40,7 +36,7 @@ func NewServer(c Config, m ManifestDB, sdb StateDB) (s Server, err error) {
 	}, nil
 }
 
-func (s *Server) getOpsLock(sender OutputSender) {
+func (s *Server) getOpsLock(sender server.OutputSender) {
 	done := make(chan bool, 0)
 	go func() {
 		c := time.Tick(time.Second)
@@ -157,9 +153,9 @@ func (s Server) Reload(_ *emptypb.Empty, vs server.Vin_ReloadServer) (err error)
 	return
 }
 
-func dispatchOutput(vs server.Vin_InstallServer, output chan string) {
+func dispatchOutput(o server.OutputSender, output chan string) {
 	for msg := range output {
-		vs.Send(&server.Output{Line: msg})
+		o.Send(&server.Output{Line: msg})
 	}
 }
 

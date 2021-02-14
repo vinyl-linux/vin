@@ -77,9 +77,23 @@ func (c client) install(pkg, version string, force bool) (err error) {
 		return
 	}
 
+	return outputLoop(vic)
+}
+
+func (c client) reload() (err error) {
+	vrc, err := c.c.Reload(context.Background(), nil)
+	if err != nil {
+		return
+	}
+
+	return outputLoop(vrc)
+}
+
+func outputLoop(o vin.OutputReceiver) (err error) {
 	var output *vin.Output
+
 	for {
-		output, err = vic.Recv()
+		output, err = o.Recv()
 		if err == io.EOF {
 			break
 		}
