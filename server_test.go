@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/gofrs/uuid"
+	"github.com/hashicorp/go-version"
 	"github.com/vinyl-linux/vin/server"
 	"google.golang.org/grpc"
 )
@@ -39,7 +40,6 @@ func TestServer_Install(t *testing.T) {
 	s, err := NewServer(c, mdb, StateDB{})
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
-
 	}
 
 	for _, test := range []struct {
@@ -78,6 +78,63 @@ func TestServer_Install(t *testing.T) {
 			}
 
 			t.Logf("err: %+v", err)
+		})
+	}
+}
+
+func TestServer_Reload(t *testing.T) {
+	pkgDir = "testdata/manifests/valid-manifests"
+	configFile = "testdata/test-config.toml"
+	cacheDir = "/tmp"
+	sockAddr = "/tmp/vin-test.sock"
+	stateDB = filepath.Join("/tmp", uuid.Must(uuid.NewV4()).String())
+
+	c, err := LoadConfig()
+	if err != nil {
+		t.Fatalf("unexpected error: %+v", err)
+	}
+
+	mdb, err := LoadDB()
+	if err != nil {
+		t.Fatalf("unexpected error: %+v", err)
+	}
+
+	s, err := NewServer(c, mdb, StateDB{})
+	if err != nil {
+		t.Fatalf("unexpected error: %+v", err)
+	}
+
+	emptyConstraint, _ := version.NewConstraint(">= 0.0.0")
+
+	// Reset ManifestDB path, hit a server reload, and see whether the ManifestDB now
+	// contains a package that wasn't there before, thus suggesting that the DB has been
+	// updated
+	for _, test := range []struct {
+		name        string
+		pkgDir      string
+		pkg         string
+		expectPkg   bool
+		expectError bool
+	}{
+		{"happy path", "testdata/manifests/null-manifests", "app-1", true, false},
+		{"no matching packages (anymore)", "testdata/no-such-manifest", "", false, false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			vs := &mockInstallServer{}
+
+			pkgDir = test.pkgDir
+
+			err = s.Reload(nil, vs)
+			if err == nil && test.expectError {
+				t.Errorf("expected error")
+			} else if err != nil && !test.expectError {
+				t.Errorf("unexpected error: %+v", err)
+			}
+
+			m, _ := s.mdb.Satisfies(test.pkg, emptyConstraint)
+			if (len(m) > 0) != test.expectPkg {
+				t.Errorf("received %d manifests, expectPkg is %v", len(m), test.expectPkg)
+			}
 		})
 	}
 }

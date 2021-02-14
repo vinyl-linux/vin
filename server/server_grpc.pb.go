@@ -7,6 +7,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type VinClient interface {
 	Install(ctx context.Context, in *InstallSpec, opts ...grpc.CallOption) (Vin_InstallClient, error)
+	Reload(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Vin_ReloadClient, error)
 }
 
 type vinClient struct {
@@ -61,11 +63,44 @@ func (x *vinInstallClient) Recv() (*Output, error) {
 	return m, nil
 }
 
+func (c *vinClient) Reload(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (Vin_ReloadClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Vin_ServiceDesc.Streams[1], "/server.Vin/Reload", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &vinReloadClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Vin_ReloadClient interface {
+	Recv() (*Output, error)
+	grpc.ClientStream
+}
+
+type vinReloadClient struct {
+	grpc.ClientStream
+}
+
+func (x *vinReloadClient) Recv() (*Output, error) {
+	m := new(Output)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // VinServer is the server API for Vin service.
 // All implementations must embed UnimplementedVinServer
 // for forward compatibility
 type VinServer interface {
 	Install(*InstallSpec, Vin_InstallServer) error
+	Reload(*emptypb.Empty, Vin_ReloadServer) error
 	mustEmbedUnimplementedVinServer()
 }
 
@@ -75,6 +110,9 @@ type UnimplementedVinServer struct {
 
 func (UnimplementedVinServer) Install(*InstallSpec, Vin_InstallServer) error {
 	return status.Errorf(codes.Unimplemented, "method Install not implemented")
+}
+func (UnimplementedVinServer) Reload(*emptypb.Empty, Vin_ReloadServer) error {
+	return status.Errorf(codes.Unimplemented, "method Reload not implemented")
 }
 func (UnimplementedVinServer) mustEmbedUnimplementedVinServer() {}
 
@@ -110,6 +148,27 @@ func (x *vinInstallServer) Send(m *Output) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _Vin_Reload_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(emptypb.Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(VinServer).Reload(m, &vinReloadServer{stream})
+}
+
+type Vin_ReloadServer interface {
+	Send(*Output) error
+	grpc.ServerStream
+}
+
+type vinReloadServer struct {
+	grpc.ServerStream
+}
+
+func (x *vinReloadServer) Send(m *Output) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // Vin_ServiceDesc is the grpc.ServiceDesc for Vin service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -121,6 +180,11 @@ var Vin_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "Install",
 			Handler:       _Vin_Install_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "Reload",
+			Handler:       _Vin_Reload_Handler,
 			ServerStreams: true,
 		},
 	},

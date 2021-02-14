@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/go-version"
 	"github.com/vinyl-linux/vin/server"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
@@ -22,8 +23,8 @@ type OutputSender interface {
 type Server struct {
 	server.UnimplementedVinServer
 
-	config Config
 	sdb    StateDB
+	config Config
 	mdb    ManifestDB
 
 	operationLock *sync.Mutex
@@ -32,9 +33,9 @@ type Server struct {
 func NewServer(c Config, m ManifestDB, sdb StateDB) (s Server, err error) {
 	return Server{
 		UnimplementedVinServer: server.UnimplementedVinServer{},
+		sdb:                    sdb,
 		config:                 c,
 		mdb:                    m,
-		sdb:                    sdb,
 		operationLock:          &sync.Mutex{},
 	}, nil
 }
@@ -134,6 +135,24 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 
 	s.sdb.AddWorld(is.Pkg, is.Version)
 	s.sdb.Write()
+
+	return
+}
+
+func (s Server) Reload(_ *emptypb.Empty, vs server.Vin_ReloadServer) (err error) {
+	vs.Send(&server.Output{
+		Line: "reloading config",
+	})
+
+	s.getOpsLock(vs)
+	defer s.operationLock.Unlock()
+
+	// reload mdb
+	s.mdb.Reload()
+
+	vs.Send(&server.Output{
+		Line: "reloaded",
+	})
 
 	return
 }
