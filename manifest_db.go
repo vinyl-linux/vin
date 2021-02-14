@@ -37,29 +37,18 @@ type ManifestDB struct {
 }
 
 func LoadDB() (d ManifestDB, err error) {
-	// Get manifests
-	manifests, err := Manifests()
-	if err != nil {
-		return
-	}
-
 	d.db, err = memdb.NewMemDB(schema)
 	if err != nil {
 		return
 	}
 
-	tx := d.db.Txn(true)
-
-	for _, manifest := range manifests {
-		err = tx.Insert("package", manifest)
-		if err != nil {
-			return
-		}
-	}
-
-	tx.Commit()
+	err = d.loadManifests()
 
 	return
+}
+
+func (d *ManifestDB) Reload() error {
+	return d.loadManifests()
 }
 
 // Satisfies returns a slice of Manifests which satisfies a constraint
@@ -103,6 +92,33 @@ func (d ManifestDB) Latest(pkg string, constraint version.Constraints) (m *Manif
 	sort.Sort(ManifestByVersion(satisfiers))
 
 	m = satisfiers[len(satisfiers)-1]
+
+	return
+}
+
+func (d *ManifestDB) loadManifests() (err error) {
+	// Get manifests
+	manifests, err := Manifests()
+	if err != nil {
+		return
+	}
+
+	// empty memdb
+	tx := d.db.Txn(true)
+
+	_, err = tx.DeleteAll("package", "id")
+	if err != nil {
+		return
+	}
+
+	for _, manifest := range manifests {
+		err = tx.Insert("package", manifest)
+		if err != nil {
+			return
+		}
+	}
+
+	tx.Commit()
 
 	return
 }

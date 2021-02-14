@@ -9,21 +9,18 @@ import (
 
 	"github.com/hashicorp/go-version"
 	"github.com/vinyl-linux/vin/server"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
 	DefaultProfile = "default"
 )
 
-type OutputSender interface {
-	Send(m *server.Output) error
-}
-
 type Server struct {
 	server.UnimplementedVinServer
 
-	config Config
 	sdb    StateDB
+	config Config
 	mdb    ManifestDB
 
 	operationLock *sync.Mutex
@@ -32,14 +29,14 @@ type Server struct {
 func NewServer(c Config, m ManifestDB, sdb StateDB) (s Server, err error) {
 	return Server{
 		UnimplementedVinServer: server.UnimplementedVinServer{},
+		sdb:                    sdb,
 		config:                 c,
 		mdb:                    m,
-		sdb:                    sdb,
 		operationLock:          &sync.Mutex{},
 	}, nil
 }
 
-func (s *Server) getOpsLock(sender OutputSender) {
+func (s *Server) getOpsLock(sender server.OutputSender) {
 	done := make(chan bool, 0)
 	go func() {
 		c := time.Tick(time.Second)
@@ -138,9 +135,27 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 	return
 }
 
-func dispatchOutput(vs server.Vin_InstallServer, output chan string) {
+func (s Server) Reload(_ *emptypb.Empty, vs server.Vin_ReloadServer) (err error) {
+	vs.Send(&server.Output{
+		Line: "reloading config",
+	})
+
+	s.getOpsLock(vs)
+	defer s.operationLock.Unlock()
+
+	// reload mdb
+	s.mdb.Reload()
+
+	vs.Send(&server.Output{
+		Line: "reloaded",
+	})
+
+	return
+}
+
+func dispatchOutput(o server.OutputSender, output chan string) {
 	for msg := range output {
-		vs.Send(&server.Output{Line: msg})
+		o.Send(&server.Output{Line: msg})
 	}
 }
 
