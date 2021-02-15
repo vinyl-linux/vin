@@ -16,15 +16,15 @@ type Config struct {
 	// commands, in order to set flags during compilation.
 	//
 	// Note that --prefix is always set by vin
-	ConfigureFlags string
+	ConfigureFlags string `toml:"configure_flags"`
 
 	// MakeOpts are passed to make
-	MakeOpts string
+	MakeOpts string `toml:"MAKEOPTS"`
 
 	// CFlags and CXXFlags are inserted into the environment when
 	// running build commands
-	CFlags   string
-	CXXFlags string
+	CFlags   string `toml:"CFLAGS"`
+	CXXFlags string `toml:CXXFLAGS"`
 }
 
 func Load(configFile string) (c Config, err error) {
@@ -36,4 +36,12 @@ func Load(configFile string) (c Config, err error) {
 	err = toml.Unmarshal(d, &c)
 
 	return
+}
+
+func (c Config) String() string {
+	// swallow errors, they're both massively unlikely, and
+	// not used anywhere where error handling is necessary
+	b, _ := toml.Marshal(c)
+
+	return string(b)
 }
