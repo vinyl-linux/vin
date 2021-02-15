@@ -105,6 +105,12 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 			continue
 		}
 
+		if task.Meta {
+			output <- fmt.Sprintf("%s is a meta-package, skipping", task.ID)
+
+			continue
+		}
+
 		err = task.Prepare(output)
 		if err != nil {
 			return

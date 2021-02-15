@@ -58,6 +58,7 @@ func TestServer_Install(t *testing.T) {
 		{"valid package, 404 archive", "standalone", "0.1.3", true},
 		{"erroring commands", "standalone", "0.1.0", true},
 		{"missing package", "", "", true},
+		{"meta package", "metaz", "", false},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			// create an empty statedb
