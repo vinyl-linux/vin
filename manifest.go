@@ -81,6 +81,7 @@ type Manifest struct {
 	Checksum   string
 	Licence    string
 	Tarball    string
+	Meta       bool
 
 	Profiles map[string]Profile
 	Commands Commands

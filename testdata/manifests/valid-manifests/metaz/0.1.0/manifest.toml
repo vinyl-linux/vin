@@ -1,0 +1,7 @@
+provides = "metaz"
+version = "0.1.0"
+meta = true
+
+[profiles]
+[profiles.default]
+deps = []
