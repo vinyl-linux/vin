@@ -1,42 +1,14 @@
 package main
 
 import (
-	"io/ioutil"
 	"strings"
 	"text/template"
 
-	"github.com/pelletier/go-toml"
+	"github.com/vinyl-linux/vin/config"
 )
 
-// Config holds all of the configuration that vin needs,
-// including things like make/ confdigure opts, and so on
-//
-// This struct can be passed into builds to allow for templating
-// build opts
-type Config struct {
-	// Flags passed to './configure'. These options are available to
-	// commands, in order to set flags during compilation.
-	//
-	// Note that --prefix is always set by vin
-	ConfigureFlags string
-
-	// MakeOpts are passed to make
-	MakeOpts string
-}
-
-func LoadConfig() (c Config, err error) {
-	d, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		return
-	}
-
-	err = toml.Unmarshal(d, &c)
-
-	return
-}
-
 type InstallationValues struct {
-	Config
+	config.Config
 	*Manifest
 }
 

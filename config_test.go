@@ -2,20 +2,14 @@ package main
 
 import (
 	"testing"
-)
 
-func TestLoadConfig(t *testing.T) {
-	configFile = "this-file-should-not-exist"
-	_, err := LoadConfig()
-	if err == nil {
-		t.Errorf("expected error, received none")
-	}
-}
+	"github.com/vinyl-linux/vin/config"
+)
 
 func TestInstallationValues_Expand(t *testing.T) {
 	configFile = "testdata/test-config.toml"
 
-	c, err := LoadConfig()
+	c, err := config.Load(configFile)
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
 	}
