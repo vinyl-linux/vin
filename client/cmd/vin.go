@@ -12,6 +12,7 @@ import (
 
 	vin "github.com/vinyl-linux/vin/server"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type client struct {
@@ -81,7 +82,7 @@ func (c client) install(pkg, version string, force bool) (err error) {
 }
 
 func (c client) reload() (err error) {
-	vrc, err := c.c.Reload(context.Background(), nil)
+	vrc, err := c.c.Reload(context.Background(), &emptypb.Empty{})
 	if err != nil {
 		return
 	}
