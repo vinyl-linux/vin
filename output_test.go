@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/vinyl-linux/vin/server"
 )
 
@@ -21,6 +22,10 @@ func TestNewOutputter(t *testing.T) {
 func TestOutputter_Dispatch(t *testing.T) {
 	// This is a 'Test', rather than an 'Example' in order to test
 	// escape codes
+
+	// Ensure colour escape codes are still generated in github actions
+	// see: https://github.com/fatih/color/issues/132
+	color.NoColor = false
 
 	vs := &mockInstallServer{}
 	o := NewOutputter(vs)
