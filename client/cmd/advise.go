@@ -48,7 +48,7 @@ var adviseCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := config.Config{}
 
-		c.ConfigureFlags = "--prefix=/ --enable-openssl"
+		c.ConfigureFlags = "--prefix=/ --enable-openssl --disable-multilib"
 		c.MakeOpts = fmt.Sprintf("-j%d", int(math.Max(float64(runtime.NumCPU()-1), 1.0)))
 
 		c.CFlags = "-D_FORTIFY_SOURCE=2 -fasynchronous-unwind-tables -fexceptions -fpie -Wl,-pie -fpic -shared -fstack-clash-protection -fstack-protector-strong -mcet -fcf-protection -O2 -pipe -Wall -Werror=format-security -Werror=implicit-function-declaration -Wl,-z,defs"
@@ -57,6 +57,9 @@ var adviseCmd = &cobra.Command{
 		fmt.Fprintln(cmd.OutOrStdout(), "# vin config file")
 		fmt.Fprintln(cmd.OutOrStdout(), "#")
 		fmt.Fprintf(cmd.OutOrStdout(), "# generated at %s\n", time.Now())
+		fmt.Fprintln(cmd.OutOrStdout(), "# note: this config will only build 64bit versions of stuff. Remove --disable-multilib")
+		fmt.Fprintln(cmd.OutOrStdout(), "# from configure_flags if this is not what you expect to happen.")
+
 		fmt.Fprintln(cmd.OutOrStdout())
 		fmt.Fprint(cmd.OutOrStdout(), c.String())
 	},
