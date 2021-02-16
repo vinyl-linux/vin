@@ -24,7 +24,7 @@ type Config struct {
 	// CFlags and CXXFlags are inserted into the environment when
 	// running build commands
 	CFlags   string `toml:"CFLAGS"`
-	CXXFlags string `toml:CXXFLAGS"`
+	CXXFlags string `toml:"CXXFLAGS"`
 }
 
 func Load(configFile string) (c Config, err error) {
