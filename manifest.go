@@ -104,8 +104,7 @@ func (m Manifest) String() string { return fmt.Sprintf("%s %s", m.Provides, m.Ve
 //
 // It handles things like downloading and verifying tarballs, and subsequently untarring
 func (m *Manifest) Prepare(output chan string) (err error) {
-	// This function will download the Manifest Tarball, checksum it, un-tar it, and so on. At some
-	// point we could even think about things like applying optional patches
+	// This function will download the Manifest Tarball, checksum it, un-tar it, and so on.
 
 	m.dir = filepath.Join(cacheDir, m.Provides, m.VersionStr)
 	err = os.MkdirAll(m.dir, 0755)
@@ -114,6 +113,10 @@ func (m *Manifest) Prepare(output chan string) (err error) {
 	}
 
 	// download m.Tarball to tempdir/.tarball
+	//
+	// always assume that any tarball needs re-downloading; if we're reinstalling/
+	// recovering from a failed installation then it stands to reason that something
+	// went wrong anyway
 	fn := filepath.Join(m.dir, ".tarball")
 	output <- fmt.Sprintf("%s: downloading %q to %s", m.ID, m.Tarball, fn)
 
