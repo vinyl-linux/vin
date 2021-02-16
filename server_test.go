@@ -6,6 +6,7 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/hashicorp/go-version"
+	"github.com/vinyl-linux/vin/config"
 	"github.com/vinyl-linux/vin/server"
 	"google.golang.org/grpc"
 )
@@ -27,7 +28,7 @@ func TestServer_Install(t *testing.T) {
 	cacheDir = "/tmp"
 	sockAddr = "/tmp/vin-test.sock"
 
-	c, err := LoadConfig()
+	c, err := config.Load(configFile)
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
 	}
@@ -91,7 +92,7 @@ func TestServer_Reload(t *testing.T) {
 	sockAddr = "/tmp/vin-test.sock"
 	stateDB = filepath.Join("/tmp", uuid.Must(uuid.NewV4()).String())
 
-	c, err := LoadConfig()
+	c, err := config.Load(configFile)
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
 	}

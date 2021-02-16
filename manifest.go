@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/go-version"
 	"github.com/pelletier/go-toml"
+	"github.com/vinyl-linux/vin/config"
 )
 
 const (
@@ -226,7 +227,7 @@ func (c Commands) Patch(wd string, output chan string) (err error) {
 		patchCmd := fmt.Sprintf("patch -p1 -i %s", p)
 
 		output <- fmt.Sprintf("patch %d/%d", i+1, patches)
-		err = execute(wd, patchCmd, output)
+		err = execute(wd, patchCmd, output, config.Config{})
 		if err != nil {
 			return
 		}

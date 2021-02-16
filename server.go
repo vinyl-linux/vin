@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-version"
+	"github.com/vinyl-linux/vin/config"
 	"github.com/vinyl-linux/vin/server"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -20,13 +21,13 @@ type Server struct {
 	server.UnimplementedVinServer
 
 	sdb    StateDB
-	config Config
+	config config.Config
 	mdb    ManifestDB
 
 	operationLock *sync.Mutex
 }
 
-func NewServer(c Config, m ManifestDB, sdb StateDB) (s Server, err error) {
+func NewServer(c config.Config, m ManifestDB, sdb StateDB) (s Server, err error) {
 	return Server{
 		UnimplementedVinServer: server.UnimplementedVinServer{},
 		sdb:                    sdb,
@@ -130,7 +131,7 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 				return
 			}
 
-			err = execute(workDir, cmd, output)
+			err = execute(workDir, cmd, output, s.config)
 			if err != nil {
 				return
 			}
