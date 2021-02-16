@@ -51,7 +51,7 @@ var adviseCmd = &cobra.Command{
 		c.ConfigureFlags = "--prefix=/ --enable-openssl --disable-multilib"
 		c.MakeOpts = fmt.Sprintf("-j%d", int(math.Max(float64(runtime.NumCPU()-1), 1.0)))
 
-		c.CFlags = "-D_FORTIFY_SOURCE=2 -fasynchronous-unwind-tables -fexceptions -fpie -Wl,-pie -fpic -shared -fstack-clash-protection -fstack-protector-strong -mcet -fcf-protection -O2 -pipe -Wall -Werror=format-security -Werror=implicit-function-declaration -Wl,-z,defs"
+		c.CFlags = "-D_FORTIFY_SOURCE=2 -fasynchronous-unwind-tables -fexceptions -fpie -Wl,-pie -fpic -shared -fstack-clash-protection -fstack-protector-strong -O2 -pipe -Wall -Werror=format-security -Werror=implicit-function-declaration -Wl,-z,defs"
 		c.CXXFlags = c.CFlags
 
 		fmt.Fprintln(cmd.OutOrStdout(), "# vin config file")
