@@ -37,7 +37,7 @@ func NewServer(c config.Config, m ManifestDB, sdb StateDB) (s Server, err error)
 	}, nil
 }
 
-func (s *Server) getOpsLock(sender server.OutputSender) {
+func (s *Server) getOpsLock(oc chan string) {
 	done := make(chan bool, 0)
 	go func() {
 		c := time.Tick(time.Second)
@@ -47,7 +47,7 @@ func (s *Server) getOpsLock(sender server.OutputSender) {
 			case <-done:
 				return
 			case <-c:
-				sender.Send(&server.Output{Line: "waiting for lock"})
+				oc <- "waiting for lock"
 			}
 		}
 	}()
@@ -61,12 +61,15 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 		return fmt.Errorf("package must not be empty")
 	}
 
-	// find root manifest
-	vs.Send(&server.Output{
-		Line: fmt.Sprintf("installing %s", is.Pkg),
-	})
+	output := NewOutputter(vs)
+	output.Prefix = "setup"
 
-	s.getOpsLock(vs)
+	defer close(output.C)
+	go output.Dispatch()
+
+	output.C <- fmt.Sprintf("installing %s", is.Pkg)
+
+	s.getOpsLock(output.C)
 	defer s.operationLock.Unlock()
 
 	var ver version.Constraints
@@ -78,21 +81,13 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 		}
 	}
 
-	// create output chan and iterate over it, sending messages
-	output := make(chan string, 0)
-	defer close(output)
-
-	go dispatchOutput(vs, output)
-
-	g := NewGraph(&s.mdb, &s.sdb, output)
+	g := NewGraph(&s.mdb, &s.sdb, output.C)
 	tasks, err := g.Solve(DefaultProfile, is.Pkg, ver)
 	if err != nil {
 		return
 	}
 
-	vs.Send(&server.Output{
-		Line: fmt.Sprintf(installingLine(tasks)),
-	})
+	output.C <- installingLine(tasks)
 
 	var (
 		cmd string
@@ -103,19 +98,21 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 
 	// for each pkg
 	for _, task := range tasks {
+		output.Prefix = task.ID
+
 		if s.sdb.IsInstalled(task.ID) && !is.Force {
-			output <- fmt.Sprintf("%s is already installed, skipping", task.ID)
+			output.C <- fmt.Sprintf("%s is already installed, skipping", task.ID)
 
 			continue
 		}
 
 		if task.Meta {
-			output <- fmt.Sprintf("%s is a meta-package, skipping", task.ID)
+			output.C <- fmt.Sprintf("%s is a meta-package, skipping", task.ID)
 
 			continue
 		}
 
-		err = task.Prepare(output)
+		err = task.Prepare(output.C)
 		if err != nil {
 			return
 		}
@@ -123,7 +120,7 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 		iv := InstallationValues{s.config, task}
 		workDir := filepath.Join(task.dir, task.Commands.WorkingDir)
 
-		err = task.Commands.Patch(workDir, output)
+		err = task.Commands.Patch(workDir, output.C)
 		if err != nil {
 			return
 		}
@@ -134,7 +131,7 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 				return
 			}
 
-			err = execute(workDir, cmd, output, s.config)
+			err = execute(workDir, cmd, output.C, s.config)
 			if err != nil {
 				return
 			}
@@ -149,27 +146,23 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 }
 
 func (s Server) Reload(_ *emptypb.Empty, vs server.Vin_ReloadServer) (err error) {
-	vs.Send(&server.Output{
-		Line: "reloading config",
-	})
+	output := NewOutputter(vs)
+	output.Prefix = "reload"
 
-	s.getOpsLock(vs)
+	defer close(output.C)
+	go output.Dispatch()
+
+	output.C <- "reloading config"
+
+	s.getOpsLock(output.C)
 	defer s.operationLock.Unlock()
 
 	// reload mdb
 	s.mdb.Reload()
 
-	vs.Send(&server.Output{
-		Line: "reloaded",
-	})
+	output.C <- "reloaded"
 
 	return
-}
-
-func dispatchOutput(o server.OutputSender, output chan string) {
-	for msg := range output {
-		o.Send(&server.Output{Line: msg})
-	}
 }
 
 func installingLine(tasks []*Manifest) string {

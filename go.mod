@@ -3,6 +3,7 @@ module github.com/vinyl-linux/vin
 go 1.15
 
 require (
+	github.com/fatih/color v1.7.0
 	github.com/gofrs/uuid v4.0.0+incompatible
 	github.com/google/gofuzz v1.2.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2
