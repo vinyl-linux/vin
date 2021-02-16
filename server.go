@@ -98,6 +98,9 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 		cmd string
 	)
 
+	// Write world db to disk on return
+	defer s.sdb.Write()
+
 	// for each pkg
 	for _, task := range tasks {
 		if s.sdb.IsInstalled(task.ID) && !is.Force {
@@ -141,7 +144,6 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 	}
 
 	s.sdb.AddWorld(is.Pkg, is.Version)
-	s.sdb.Write()
 
 	return
 }
