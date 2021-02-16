@@ -42,7 +42,7 @@ func TestInstallationValues_Expand(t *testing.T) {
 			}
 
 			if test.expect != got {
-				t.Errorf("expected %q, received %q", test.expect, err)
+				t.Errorf("expected %q, received %q", test.expect, got)
 			}
 		})
 	}

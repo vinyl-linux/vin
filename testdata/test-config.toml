@@ -1,2 +1,2 @@
-configureFlags = "--enable-hello-world"
-makeOpts = "-j100"
+configure_flags = "--enable-hello-world"
+MAKEOPTS = "-j100"
