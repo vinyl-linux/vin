@@ -54,6 +54,8 @@ func (o *Outputter) Dispatch() {
 		// generate this for each message; the prefix can (and does) change often
 		prefix := prefixColour.Sprintf(o.Prefix)
 
+		msg = strings.TrimSpace(msg)
+
 		for _, line := range strings.Split(msg, "\n") {
 			o.o.Send(&server.Output{
 				Line: fmt.Sprintf("%s\t%s", prefix, line),

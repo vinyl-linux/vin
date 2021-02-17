@@ -36,6 +36,7 @@ func TestOutputter_Dispatch(t *testing.T) {
 		{"", "Hello, world!", 1, "\x1b[36;1m\x1b[0m\tHello, world!"},
 		{"test", "Doing Tests!", 1, "\x1b[36;1mtest\x1b[0m\tDoing Tests!"},
 		{"multiline", "Line 1\nAnd another!", 2, "\x1b[36;1mmultiline\x1b[0m\tLine 1\n\x1b[36;1mmultiline\x1b[0m\tAnd another!"},
+		{"trailing", "Trailing whitespace\n", 1, "\x1b[36;1mtrailing\x1b[0m\tTrailing whitespace"},
 	} {
 		t.Run("", func(t *testing.T) {
 			vs.messages = []*server.Output{}
