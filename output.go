@@ -12,6 +12,18 @@ var (
 	prefixColour = color.New(color.FgCyan, color.Bold)
 )
 
+func init() {
+	// Ensure colour escape codes are generated properly, in both
+	// gitlab actions _and_ when running `vind` under s6 - in both cases
+	// the `color` package doesn't create escape codes because we're not
+	// running as a real terminal.
+	//
+	// In the case of `vind` this is fine; we might not be a terminal, but
+	// the `vin` client is certainly running under one
+	color.NoColor = false
+
+}
+
 // Outputter handles writing strings to vin
 // clients by reading strings from a chan and writing
 // them, prefixed with an additional string, to a server.OutputSender
@@ -25,6 +37,7 @@ type Outputter struct {
 // NewOutputter takes an OutputSender and returns an Outputter
 // ready to be dispatched across
 func NewOutputter(o server.OutputSender) Outputter {
+
 	return Outputter{
 		C:      make(chan string),
 		Prefix: "",
