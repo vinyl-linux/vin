@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -32,12 +33,14 @@ func TestOutputter_Dispatch(t *testing.T) {
 	go o.Dispatch()
 
 	for _, test := range []struct {
-		prefix string
-		msg    string
-		expect string
+		prefix      string
+		msg         string
+		expectCount int
+		expect      string
 	}{
-		{"", "Hello, world!", "\x1b[36;1m\x1b[0m\tHello, world!"},
-		{"test", "Doing Tests!", "\x1b[36;1mtest\x1b[0m\tDoing Tests!"},
+		{"", "Hello, world!", 1, "\x1b[36;1m\x1b[0m\tHello, world!"},
+		{"test", "Doing Tests!", 1, "\x1b[36;1mtest\x1b[0m\tDoing Tests!"},
+		{"multiline", "Line 1\nAnd another!", 2, "\x1b[36;1mmultiline\x1b[0m\tLine 1\n\x1b[36;1mmultiline\x1b[0m\tAnd another!"},
 	} {
 		t.Run("", func(t *testing.T) {
 			vs.messages = []*server.Output{}
@@ -47,14 +50,20 @@ func TestOutputter_Dispatch(t *testing.T) {
 
 			time.Sleep(time.Millisecond * 200)
 
-			if len(vs.messages) != 1 {
-				t.Fatalf("vs.messages: expected %d, received %d", 1, len(vs.messages))
+			if len(vs.messages) != test.expectCount {
+				t.Fatalf("vs.messages: expected %d, received %d", test.expectCount, len(vs.messages))
 			}
 
-			if test.expect != vs.messages[0].Line {
-				t.Errorf("expected %q, recveived %q", test.expect, vs.messages[0].Line)
+			lines := []string{}
+			for _, m := range vs.messages {
+				lines = append(lines, m.Line)
 			}
 
+			got := strings.Join(lines, "\n")
+
+			if test.expect != got {
+				t.Errorf("expected %q, recveived %q", test.expect, got)
+			}
 		})
 	}
 }

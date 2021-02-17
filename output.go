@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/vinyl-linux/vin/server"
@@ -40,8 +41,10 @@ func (o *Outputter) Dispatch() {
 		// generate this for each message; the prefix can (and does) change often
 		prefix := prefixColour.Sprintf(o.Prefix)
 
-		o.o.Send(&server.Output{
-			Line: fmt.Sprintf("%s\t%s", prefix, msg),
-		})
+		for _, line := range strings.Split(msg, "\n") {
+			o.o.Send(&server.Output{
+				Line: fmt.Sprintf("%s\t%s", prefix, line),
+			})
+		}
 	}
 }
