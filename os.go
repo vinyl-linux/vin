@@ -209,7 +209,7 @@ func decompressLoop(tr *tar.Reader, dest string) (err error) {
 	}
 }
 
-func execute(dir, command string, output chan string, c config.Config) (err error) {
+func execute(dir, command string, skipEnv bool, output chan string, c config.Config) (err error) {
 	cmdSlice := strings.Fields(command)
 
 	var args []string
@@ -226,8 +226,10 @@ func execute(dir, command string, output chan string, c config.Config) (err erro
 	cmd := exec.CommandContext(context.Background(), cmdSlice[0], args...)
 	cmd.Dir = dir
 
-	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, fmt.Sprintf("CFLAGS=%s", c.CFlags), fmt.Sprintf("CXXFLAGS=%s", c.CXXFlags))
+	if !skipEnv {
+		cmd.Env = os.Environ()
+		cmd.Env = append(cmd.Env, fmt.Sprintf("CFLAGS=%s", c.CFlags), fmt.Sprintf("CXXFLAGS=%s", c.CXXFlags))
+	}
 
 	outputWriter := ChanWriter(output)
 	cmd.Stdout = outputWriter

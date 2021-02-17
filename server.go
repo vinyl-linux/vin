@@ -131,7 +131,7 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 				return
 			}
 
-			err = execute(workDir, cmd, output.C, s.config)
+			err = execute(workDir, cmd, task.Commands.Skipenv, output.C, s.config)
 			if err != nil {
 				return
 			}
