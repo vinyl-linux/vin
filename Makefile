@@ -22,14 +22,15 @@ BINARIES := $(BINDIR)/vind \
 
 CONFIGS := $(ETCDIR)/vin.toml
 
-SERVICES := $(SRVDIR)/run      \
-	    $(SRVDIR)/finish   \
-	    $(SRVDIR)/type     \
-	    $(SRVDIR)/conf     \
-	    $(SRVDIR)/log/run  \
-	    $(SRVDIR)/env/HOME \
-	    $(SRVDIR)/env/VIN_SOCKET_ADDR \
-	    $(SRVDIR)/env/FORCE_UNSAFE_CONFIGURE
+SERVICES := $(SRVDIR)/run                        \
+	    $(SRVDIR)/finish                     \
+	    $(SRVDIR)/type                       \
+	    $(SRVDIR)/conf                       \
+	    $(SRVDIR)/log/run                    \
+	    $(SRVDIR)/env/HOME                   \
+	    $(SRVDIR)/env/VIN_SOCKET_ADDR        \
+	    $(SRVDIR)/env/FORCE_UNSAFE_CONFIGURE \
+	    $(SRVDIR)/env/PATH
 
 
 .PHONY: default
