@@ -169,6 +169,7 @@ type Commands struct {
 	Install    *string
 	WorkingDir string
 	Patches    []string
+	Skipenv    bool
 }
 
 // Slice returns each command in an ordered slice
@@ -230,7 +231,7 @@ func (c Commands) Patch(wd string, output chan string) (err error) {
 		patchCmd := fmt.Sprintf("patch -p1 -i %s", p)
 
 		output <- fmt.Sprintf("patch %d/%d", i+1, patches)
-		err = execute(wd, patchCmd, output, config.Config{})
+		err = execute(wd, patchCmd, c.Skipenv, output, config.Config{})
 		if err != nil {
 			return
 		}
