@@ -1,6 +1,8 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -81,6 +83,73 @@ func TestServer_Install(t *testing.T) {
 			}
 
 			t.Logf("err: %+v", err)
+		})
+	}
+}
+
+func TestServer_Install_SkipEnv(t *testing.T) {
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("unexpected error: %+v", err)
+	}
+
+	pkgDir = filepath.Join(wd, "testdata/manifests/valid-manifests")
+	stateDB = filepath.Join("tmp", uuid.Must(uuid.NewV4()).String(), "vin-test.db")
+	cacheDir = filepath.Join("tmp", uuid.Must(uuid.NewV4()).String())
+
+	c := config.Config{
+		MakeOpts: "--always-make",
+		CFlags:   "-g -O2 -Wall",
+	}
+
+	mdb, err := LoadDB()
+	if err != nil {
+		t.Fatalf("unexpected error: %+v", err)
+	}
+
+	sdb, _ := LoadStateDB()
+
+	s, err := NewServer(c, mdb, sdb)
+	if err != nil {
+		t.Fatalf("unexpected error: %+v", err)
+	}
+
+	is := &server.InstallSpec{
+		Pkg:     "no-env",
+		Version: ">= 0.0.0",
+	}
+
+	vs := &mockInstallServer{}
+	err = s.Install(is, vs)
+	if err != nil {
+		for _, m := range vs.messages {
+			t.Logf("%s", m)
+		}
+
+		t.Fatalf("unexpected error: %+v", err)
+	}
+
+	t.Logf("cacheDir: %q", cacheDir)
+
+	for _, test := range []struct {
+		file   string
+		expect string
+	}{
+		{"makeopts", "\n"},
+		{"cflags", "\n"},
+	} {
+		t.Run(test.file, func(t *testing.T) {
+			f, err := ioutil.ReadFile(filepath.Join(cacheDir, "no-env", "1.0.0", test.file))
+			if err != nil {
+				t.Fatalf("unexpected error: %+v", err)
+			}
+
+			contents := string(f)
+			t.Logf("contents: %q", contents)
+
+			if test.expect != contents {
+				t.Errorf("expected %q, received %q", test.expect, contents)
+			}
 		})
 	}
 }

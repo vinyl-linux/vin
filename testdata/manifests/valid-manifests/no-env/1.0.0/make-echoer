@@ -1,0 +1,5 @@
+#!/bin/sh
+
+echo $CFLAGS > cflags
+
+env > env
