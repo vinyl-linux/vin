@@ -40,6 +40,8 @@ import (
 	"github.com/vinyl-linux/vin/config"
 )
 
+const flags = "-g -O2 -pipe -Wall"
+
 // adviseCmd represents the advise command
 var adviseCmd = &cobra.Command{
 	Use:   "advise",
@@ -48,11 +50,11 @@ var adviseCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		c := config.Config{}
 
-		c.ConfigureFlags = "--prefix=/ --enable-openssl --disable-multilib"
+		c.ConfigureFlags = "--prefix=/ --enable-openssl --disable-multilib --with-system-zlib"
 		c.MakeOpts = fmt.Sprintf("-j%d", int(math.Max(float64(runtime.NumCPU()-1), 1.0)))
 
-		c.CFlags = "-D_FORTIFY_SOURCE=2 -fasynchronous-unwind-tables -fexceptions -fpie -Wl,-pie -fpic -shared -fstack-clash-protection -fstack-protector-strong -O2 -pipe -Wall -Werror=format-security -Werror=implicit-function-declaration -Wl,-z,defs"
-		c.CXXFlags = c.CFlags
+		c.CFlags = flags
+		c.CXXFlags = flags
 
 		fmt.Fprintln(cmd.OutOrStdout(), "# vin config file")
 		fmt.Fprintln(cmd.OutOrStdout(), "#")
