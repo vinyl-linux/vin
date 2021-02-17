@@ -28,7 +28,8 @@ SERVICES := $(SRVDIR)/run      \
 	    $(SRVDIR)/conf     \
 	    $(SRVDIR)/log/run  \
 	    $(SRVDIR)/env/HOME \
-	    $(SRVDIR)/env/VIN_SOCKET_ADDR
+	    $(SRVDIR)/env/VIN_SOCKET_ADDR \
+	    $(SRVDIR)/env/FORCE_UNSAFE_CONFIGURE
 
 
 .PHONY: default
