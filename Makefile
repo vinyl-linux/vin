@@ -28,7 +28,8 @@ SERVICES := $(SRVDIR)/run      \
 	    $(SRVDIR)/conf     \
 	    $(SRVDIR)/log/run  \
 	    $(SRVDIR)/env/HOME \
-	    $(SRVDIR)/env/VIN_SOCKET_ADDR
+	    $(SRVDIR)/env/VIN_SOCKET_ADDR \
+	    $(SRVDIR)/env/FORCE_UNSAFE_CONFIGURE
 
 
 .PHONY: default
@@ -52,7 +53,6 @@ vin: client/*.go client/**/*.go server/install.pb.go server/server.pb.go server/
 	(cd client && CGO_ENABLED=0 go build -o ../vin)
 
 installCmd     ?= install -m 0750 -o $(OWNER)
-confInstallCmd ?= install -m 0640 -o $(OWNER)
 
 .PHONY: install
 install: dirs $(BINARIES) $(CONFIGS) $(SERVICES)
@@ -60,8 +60,9 @@ install: dirs $(BINARIES) $(CONFIGS) $(SERVICES)
 $(BINDIR)/%: % $(BINDIR)
 	$(installCmd) $< $@
 
-$(ETCDIR)/%: $(ETCDIR)
-	$(confInstallCmd) /dev/null $@
+$(ETCDIR)/vin.toml: $(BINDIR)/vin $(ETCDIR)
+	[ -f $@ ] && mv $@ $@.bak
+	$< advise > $@
 
 $(SRVDIR)/%: service/% $(SRVDIR)
 	$(installCmd) $< $@
