@@ -72,7 +72,7 @@ func TestExecute(t *testing.T) {
 				}
 			}()
 
-			err := execute(test.dir, test.command, output, config.Config{})
+			err := execute(test.dir, test.command, false, output, config.Config{})
 			close(output)
 			if err == nil && test.expectError {
 				t.Errorf("expected error")
