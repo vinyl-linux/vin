@@ -61,7 +61,7 @@ $(BINDIR)/%: % $(BINDIR)
 	$(installCmd) $< $@
 
 $(ETCDIR)/vin.toml: $(BINDIR)/vin $(ETCDIR)
-	[ -f $@ ] && mv $@ $@.bak
+	-mv $@ $@.bak
 	$< advise > $@
 
 $(SRVDIR)/%: service/% $(SRVDIR)
