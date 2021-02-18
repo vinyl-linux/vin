@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/h2non/filetype"
 	"github.com/vinyl-linux/vin/config"
@@ -25,6 +24,7 @@ var (
 	cacheDir   = getEnv("VIN_CACHE", "/var/cache/vinyl/vin/packages")
 	sockAddr   = getEnv("VIN_SOCKET_ADDR", "/var/run/vin.sock")
 	stateDB    = getEnv("VIN_STATE_DB", "/etc/vinyl/vin.db")
+	shell      = getEnv("VIN_DEFAULT_SHELL", "/bin/bash")
 )
 
 // ChanWriter wraps a string channel, and implements the io.Writer
@@ -210,20 +210,17 @@ func decompressLoop(tr *tar.Reader, dest string) (err error) {
 }
 
 func execute(dir, command string, skipEnv bool, output chan string, c config.Config) (err error) {
-	cmdSlice := strings.Fields(command)
-
-	var args []string
-
-	switch len(cmdSlice) {
-	case 0:
-		return fmt.Errorf("execute: %q is empty, or cannot be split", command)
-	case 1:
-		// NOP; in this case leave args as empty
-	default:
-		args = cmdSlice[1:len(cmdSlice)]
+	if command == "" {
+		return fmt.Errorf("empty command passed")
 	}
 
-	cmd := exec.CommandContext(context.Background(), cmdSlice[0], args...)
+	args := []string{
+		"-l",
+		"-c",
+		command,
+	}
+
+	cmd := exec.CommandContext(context.Background(), shell, args...)
 	cmd.Dir = dir
 
 	if !skipEnv {

@@ -59,7 +59,7 @@ func TestExecute(t *testing.T) {
 	}{
 		{"happy path, no output", ".", "true", "", false},
 		{"read file", "testdata", "cat hello-world", "hello, world!\n", false},
-		{"no such command", ".", "ahkjsdhkajshkqrzokhz", "", true},
+		{"no such command", ".", "ahkjsdhkajshkqrzokhz", "/bin/bash: ahkjsdhkajshkqrzokhz: command not found\n", true},
 		{"good command, bad file", ".", "cat nonsuch.txt", "cat: nonsuch.txt: No such file or directory\n", true},
 		{"empty command", "", "", "", true},
 	} {
@@ -82,9 +82,13 @@ func TestExecute(t *testing.T) {
 				t.Errorf("unexpected error: %+v", err)
 			}
 
-			got := outputB.String()
-			if test.expect != got {
-				t.Errorf("expected %q, received %q", test.expect, got)
+			// Ignore output from error; I don't care, really, about the output from different implementations
+			// of bash (especially where bash may be a symlink, or on macos)
+			if !test.expectError {
+				got := outputB.String()
+				if test.expect != got {
+					t.Errorf("expected %q, received %q", test.expect, got)
+				}
 			}
 		})
 	}
