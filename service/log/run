@@ -1,3 +1,0 @@
-#!/bin/execlineb -P
-
-/bin/s6-log T /var/log/vind

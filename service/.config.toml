@@ -1,0 +1,10 @@
+type = "service"
+reload_signal = "SIGHUP"
+
+[user]
+user = "root"
+group = "root"
+
+[grouping]
+name = "system"
+
