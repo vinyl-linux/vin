@@ -137,6 +137,13 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 			}
 		}
 
+		if task.ServiceDir != "" {
+			err = installServiceDir(filepath.Join(task.ManifestDir, task.ServiceDir))
+			if err != nil {
+				return
+			}
+		}
+
 		s.sdb.AddInstalled(task.ID, time.Now())
 	}
 

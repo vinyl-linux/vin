@@ -2,3 +2,4 @@ vin
 vind
 !.gitkeep
 tmp/
+testdata/manifests-with-services/svcDir

@@ -85,6 +85,44 @@ func TestServer_Install(t *testing.T) {
 	}
 }
 
+func TestServer_Install_WithService(t *testing.T) {
+	pkgDir = "testdata/manifests-with-services"
+	configFile = "testdata/test-config.toml"
+	cacheDir = "/tmp"
+	sockAddr = "/tmp/vin-test.sock"
+	svcDir = "testdata/manifests-with-services/svcDir"
+
+	c, err := config.Load(configFile)
+	if err != nil {
+		t.Fatalf("unexpected error: %+v", err)
+	}
+
+	mdb, err := LoadDB()
+	if err != nil {
+		t.Fatalf("unexpected error: %+v", err)
+	}
+
+	s, err := NewServer(c, mdb, StateDB{})
+	if err != nil {
+		t.Fatalf("unexpected error: %+v", err)
+	}
+
+	stateDB = filepath.Join("tmp", uuid.Must(uuid.NewV4()).String(), "vin-test.db")
+	s.sdb, _ = LoadStateDB()
+
+	is := &server.InstallSpec{
+		Pkg:     "sample-app",
+		Version: "",
+	}
+
+	vs := &mockInstallServer{}
+
+	err = s.Install(is, vs)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestServer_Reload(t *testing.T) {
 	pkgDir = "testdata/manifests/valid-manifests"
 	configFile = "testdata/test-config.toml"

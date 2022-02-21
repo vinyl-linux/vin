@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
 	"os/exec"
@@ -25,6 +26,7 @@ var (
 	cacheDir   = getEnv("VIN_CACHE", "/var/cache/vinyl/vin/packages")
 	sockAddr   = getEnv("VIN_SOCKET_ADDR", "/var/run/vin.sock")
 	stateDB    = getEnv("VIN_STATE_DB", "/etc/vinyl/vin.db")
+	svcDir     = getEnv("VINIT_SVC_DIR", "/etc/vinit/services")
 )
 
 // ChanWriter wraps a string channel, and implements the io.Writer
@@ -220,7 +222,7 @@ func execute(dir, command string, skipEnv bool, output chan string, c config.Con
 	case 1:
 		// NOP; in this case leave args as empty
 	default:
-		args = cmdSlice[1:len(cmdSlice)]
+		args = cmdSlice[1:]
 	}
 
 	cmd := exec.CommandContext(context.Background(), cmdSlice[0], args...)
@@ -236,4 +238,44 @@ func execute(dir, command string, skipEnv bool, output chan string, c config.Con
 	cmd.Stderr = outputWriter
 
 	return cmd.Run()
+}
+
+func installServiceDir(src string) (err error) {
+	return filepath.Walk(src, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		name := strings.TrimPrefix(path, src)
+		dst := filepath.Join(svcDir, filepath.Base(src), name)
+
+		if info.IsDir() {
+			return os.MkdirAll(dst, 0700)
+		}
+
+		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
+			l, err := filepath.EvalSymlinks(path)
+			if err != nil {
+				return err
+			}
+
+			return os.Symlink(l, dst)
+		}
+
+		source, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer source.Close()
+
+		destination, err := os.Create(dst)
+		if err != nil {
+			return err
+		}
+
+		defer destination.Close()
+		_, err = io.Copy(destination, source)
+
+		return err
+	})
 }
