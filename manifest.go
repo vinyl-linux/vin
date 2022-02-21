@@ -83,6 +83,7 @@ type Manifest struct {
 	Licence    string
 	Tarball    string
 	Meta       bool
+	ServiceDir string `toml:"service_directory"`
 
 	Profiles map[string]Profile
 	Commands Commands
