@@ -35,6 +35,8 @@ func init() {
 func main() {
 	defer os.Remove(sockAddr)
 
+	os.Remove(sockAddr) //#nosec: G104
+
 	lis, err := net.Listen("unix", sockAddr)
 	if err != nil {
 		sugar.Panic(err)
