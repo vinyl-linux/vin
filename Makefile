@@ -3,7 +3,7 @@ BINDIR ?= "$(PREFIX)/usr/bin"
 ETCDIR ?= "$(PREFIX)/etc/vinyl"
 CACHEDIR ?= "$(PREFIX)/var/cache/vinyl/vin"
 PKGDIR ?= "$(ETCDIR)/pkg"
-SRVDIR ?= "$(PREFIX)/etc/vinit/services/vind"
+SRVDIR ?= "$(PREFIX)/etc/vinit/services/99-vind"
 
 OWNER ?= "root"
 
