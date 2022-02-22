@@ -8,9 +8,26 @@ jobs:
   fuzz:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
-        with:
-          go-version: 1.17
-      - name: fuzz tests
-        run: go test --tags=fuzz -run TestFuzzServer_Install -v
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-go@v2
+      with:
+        go-version: 1.17
+
+    - name: fuzz tests
+      run: go test --tags=fuzz -run TestFuzzServer_Install -v
+
+    - name: Package
+      run: |
+        make
+        mkdir vin-linux-x86_64
+        cp vin vind vin-linux-x86_64
+        tar cvvjf vin-linux-x86_64.tar.bz2 vin-linux-x86_64
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          vin-linux-x86_64.tar.bz2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

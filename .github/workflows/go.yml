@@ -41,6 +41,21 @@ jobs:
         github-token: ${{ secrets.github_token }}
         path-to-lcov: coverage.lcov
 
+    - name: Package
+      if: startsWith(github.ref, 'refs/tags/')
+      run: |
+        mkdir vin-linux-x86_64
+        cp vin vind vin-dist
+        tar cvvjf vin-linux-x86_64.tar.bz2 vin-linux-x86_64
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          vin-linux-x86_64.tar.bz2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   sonarcloud:
     runs-on: ubuntu-latest
