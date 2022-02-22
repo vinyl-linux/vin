@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -170,6 +171,14 @@ func (s Server) Reload(_ *emptypb.Empty, vs server.Vin_ReloadServer) (err error)
 	output.C <- "reloaded"
 
 	return
+}
+
+func (s Server) Version(ctx context.Context, _ *emptypb.Empty) (v *server.VersionMessage, err error) {
+	return &server.VersionMessage{
+		Ref:       ref,
+		BuildUser: buildUser,
+		BuiltOn:   builtOn,
+	}, nil
 }
 
 func installingLine(tasks []*Manifest) string {

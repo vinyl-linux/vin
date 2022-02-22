@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
 
@@ -175,6 +176,31 @@ func TestServer_Reload(t *testing.T) {
 			m, _ := s.mdb.Satisfies(test.pkg, emptyConstraint)
 			if (len(m) > 0) != test.expectPkg {
 				t.Errorf("received %d manifests, expectPkg is %v", len(m), test.expectPkg)
+			}
+		})
+	}
+}
+
+func TestServer_Version(t *testing.T) {
+	s := Server{}
+
+	out, err := s.Version(context.Background(), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, test := range []struct {
+		key    string
+		value  string
+		expect string
+	}{
+		{"Ref", out.Ref, "unknown"},
+		{"BuildUser", out.BuildUser, "unknown"},
+		{"BuiltOn", out.BuiltOn, "unknown"},
+	} {
+		t.Run(test.key, func(t *testing.T) {
+			if test.expect != test.value {
+				t.Errorf("expected %q, received %q", test.expect, test.value)
 			}
 		})
 	}
