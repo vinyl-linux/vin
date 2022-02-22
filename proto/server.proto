@@ -11,6 +11,7 @@ package server;
 service Vin {
   rpc Install(InstallSpec) returns (stream Output) {}
   rpc Reload(google.protobuf.Empty) returns (stream Output) {}
+  rpc Version(google.protobuf.Empty) returns (VersionMessage) {}
 }
 
 // Output holds lines of text to print/
@@ -19,4 +20,15 @@ service Vin {
 // whatever
 message Output {
   string line = 1;
+}
+
+// Version holds contains data pertaining to the version
+// of vind which is running
+message VersionMessage {
+  string ref = 1;
+  string build_user = 2;
+
+  // We store this as a string, rather than a datetime, because
+  // we never need to do anything clever with it, beyond showing it
+  string built_on = 3;
 }

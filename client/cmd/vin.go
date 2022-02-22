@@ -90,6 +90,15 @@ func (c client) reload() (err error) {
 	return outputLoop(vrc)
 }
 
+func (c client) version() (out string, err error) {
+	v, err := c.c.Version(context.Background(), new(emptypb.Empty))
+	if err != nil {
+		return
+	}
+
+	return formatVersion(true, v.Ref, v.BuildUser, v.BuiltOn), nil
+}
+
 func outputLoop(o vin.OutputReceiver) (err error) {
 	var output *vin.Output
 
@@ -107,4 +116,18 @@ func outputLoop(o vin.OutputReceiver) (err error) {
 	}
 
 	return nil
+}
+
+func formatVersion(isServer bool, ref, user, built string) string {
+	return fmt.Sprintf("%s version\n---\nVersion: %s\nBuild User: %s\nBuilt On: %s\n",
+		isServerString(isServer), ref, user, built,
+	)
+}
+
+func isServerString(b bool) string {
+	if b {
+		return "Server"
+	}
+
+	return "Client"
 }

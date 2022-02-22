@@ -75,6 +75,18 @@ func (c *dummyInstallClient) Reload(_ context.Context, _ *emptypb.Empty, _ ...gr
 	return c, nil
 }
 
+func (c *dummyInstallClient) Version(context.Context, *emptypb.Empty, ...grpc.CallOption) (*vin.VersionMessage, error) {
+	if c.err {
+		return nil, fmt.Errorf("an error")
+	}
+
+	return &vin.VersionMessage{
+		Ref:       "v1.0.0",
+		BuildUser: "ci-build",
+		BuiltOn:   "1970-01-01",
+	}, nil
+}
+
 func (c *dummyInstallClient) Recv() (*vin.Output, error) {
 	if c.recvErr {
 		return nil, fmt.Errorf("an error")
