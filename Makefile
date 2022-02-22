@@ -48,7 +48,10 @@ binInstallCmd     ?= install -m 0700 -o $(OWNER)
 regInstallCmd     ?= install -m 0600 -o $(OWNER)
 
 .PHONY: install
-install: dirs $(BINARIES) $(CONFIGS) $(SERVICES)
+install: dirs $(BINARIES) $(CONFIGS)
+
+.PHONY: install-service
+install-service: $(SERVICES)
 
 $(BINDIR)/%: % | $(BINDIR)
 	$(binInstallCmd) $< $@
