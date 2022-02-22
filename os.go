@@ -259,6 +259,14 @@ func installServiceDir(src string) (err error) {
 				return err
 			}
 
+			// delete destination first; otherwise os.Symlink
+			// will error.
+			//
+			// Ignore the error; the only pertinent error is
+			// that the destination does not exist (which we don't
+			// care about)- anything else will be caught elsewhere
+			os.Remove(dst)
+
 			return os.Symlink(l, dst)
 		}
 
