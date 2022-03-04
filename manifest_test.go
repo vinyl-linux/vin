@@ -142,3 +142,28 @@ func TestCommands_Patch(t *testing.T) {
 		})
 	}
 }
+
+func TestManifests(t *testing.T) {
+	oldPkgDir := pkgDir
+	defer func() {
+		pkgDir = oldPkgDir
+	}()
+
+	pkgDir = "testdata/manifests/valid-manifests:testdata/manifests-with-services"
+
+	m, err := Manifests()
+	if err != nil {
+		t.Fatalf("unexpected error: %#v", err)
+	}
+
+	expect := 16
+	received := len(m)
+
+	if expect != received {
+		for _, svc := range m {
+			t.Logf("%v", svc)
+		}
+
+		t.Errorf("expected %d services, received %d", expect, received)
+	}
+}

@@ -112,7 +112,7 @@ func TestServer_Install_WithService(t *testing.T) {
 	s.sdb, _ = LoadStateDB()
 
 	is := &server.InstallSpec{
-		Pkg:     "sample-app",
+		Pkg:     "another-sample-app",
 		Version: "",
 	}
 

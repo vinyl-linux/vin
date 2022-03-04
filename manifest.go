@@ -262,6 +262,10 @@ func Manifests() (m []*Manifest, err error) {
 
 			return nil
 		})
+
+		if err != nil {
+			break
+		}
 	}
 
 	return
