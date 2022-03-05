@@ -1,0 +1,6 @@
+provides = "complex-versions-app"
+version = "3.2.1-r1"
+
+[profiles]
+[profiles.default]    # All manifests need a default profile
+deps = []
