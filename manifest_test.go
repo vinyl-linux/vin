@@ -156,7 +156,7 @@ func TestManifests(t *testing.T) {
 		t.Fatalf("unexpected error: %#v", err)
 	}
 
-	expect := 16
+	expect := 20
 	received := len(m)
 
 	if expect != received {

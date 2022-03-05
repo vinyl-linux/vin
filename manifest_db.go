@@ -63,12 +63,24 @@ func (d ManifestDB) Satisfies(pkg string, constraint version.Constraints) (s []*
 		return
 	}
 
+	var (
+		latestManifest *Manifest
+	)
+
 	for obj := it.Next(); obj != nil; obj = it.Next() {
 		m := obj.(*Manifest)
+
+		if constraint.String() == latest.String() && (latestManifest == nil || m.Version.GreaterThan(latestManifest.Version)) {
+			latestManifest = m
+		}
 
 		if constraint.Check(m.Version) {
 			s = append(s, m)
 		}
+	}
+
+	if len(s) == 0 && latestManifest != nil {
+		s = []*Manifest{latestManifest}
 	}
 
 	return
