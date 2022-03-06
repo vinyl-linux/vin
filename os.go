@@ -209,13 +209,22 @@ func decompressLoop(tr *tar.Reader, dest string) (err error) {
 			f.Close()
 
 		case tar.TypeLink:
-			err = os.Link(header.Linkname, target)
+			// remove target if it exists.
+			//
+			// ignoring the error is fine here; if there's an error
+			// we'll see it when we try to link anyway /shrug
+			os.Remove(target)
+
+			err = os.Link(filepath.Join(dest, header.Linkname), target)
 			if err != nil {
 				return
 			}
 
 		case tar.TypeSymlink:
-			err = os.Symlink(header.Linkname, target)
+			// see comment for the tar.TypeLink case above;
+			os.Remove(target)
+
+			err = os.Symlink(filepath.Join(dest, header.Linkname), target)
 			if err != nil {
 				return
 			}
