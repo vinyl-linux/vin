@@ -224,7 +224,11 @@ func decompressLoop(tr *tar.Reader, dest string) (err error) {
 			// see comment for the tar.TypeLink case above;
 			os.Remove(target)
 
-			err = os.Symlink(filepath.Join(dest, header.Linkname), target)
+			// we don't need to worry about prefixing synlinks. Infact,
+			// we probably don't want that at all. symlinks can point to
+			// files that don't exist, and probably want to be more flexible
+			// for things like relative links anyway
+			err = os.Symlink(header.Linkname, target)
 			if err != nil {
 				return
 			}
