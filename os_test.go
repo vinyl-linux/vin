@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -47,6 +48,44 @@ func TestUntar(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestUntar_WithLinks(t *testing.T) {
+	dir := "testdata"
+
+	err := untar("testdata/complex.tar.bz2", dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %+v", err)
+	}
+
+	defer os.RemoveAll("testdata/testdata")
+
+	t.Run("checksum", func(t *testing.T) {
+		expect := "9fbefb949709fc7086ab4be43544d08406f0ededa0733f6683424e774a6cb799"
+
+		sum, err := checksum(filepath.Join(dir, "testdata", "raw"))
+		if err != nil {
+			t.Fatalf("unexpected error: %+v", err)
+		}
+
+		if expect != sum {
+			t.Errorf("expected %q, received %q", expect, sum)
+		}
+	})
+
+	t.Run("hard links", func(t *testing.T) {
+		_, err := os.Stat(filepath.Join(dir, "testdata", "hardlink"))
+		if err != nil {
+			t.Fatalf("unexpected error: %+v", err)
+		}
+	})
+
+	t.Run("symlinks", func(t *testing.T) {
+		_, err := os.Stat(filepath.Join(dir, "testdata", "symlink"))
+		if err != nil {
+			t.Fatalf("unexpected error: %+v", err)
+		}
+	})
 }
 
 func TestExecute(t *testing.T) {

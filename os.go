@@ -207,6 +207,19 @@ func decompressLoop(tr *tar.Reader, dest string) (err error) {
 			}
 
 			f.Close()
+
+		case tar.TypeLink:
+			err = os.Link(header.Linkname, target)
+			if err != nil {
+				return
+			}
+
+		case tar.TypeSymlink:
+			err = os.Symlink(header.Linkname, target)
+			if err != nil {
+				return
+			}
+
 		}
 	}
 }
