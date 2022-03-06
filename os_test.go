@@ -51,19 +51,20 @@ func TestUntar(t *testing.T) {
 }
 
 func TestUntar_WithLinks(t *testing.T) {
-	dir := "testdata"
-
-	err := untar("testdata/complex.tar.bz2", dir)
+	dir, err := ioutil.TempDir("", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
 	}
 
-	defer os.RemoveAll("testdata/testdata")
+	err = untar("testdata/complex.tar.bz2", dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %+v", err)
+	}
 
 	t.Run("checksum", func(t *testing.T) {
 		expect := "9fbefb949709fc7086ab4be43544d08406f0ededa0733f6683424e774a6cb799"
 
-		sum, err := checksum(filepath.Join(dir, "testdata", "raw"))
+		sum, err := checksum(filepath.Join(dir, "raw"))
 		if err != nil {
 			t.Fatalf("unexpected error: %+v", err)
 		}
@@ -74,14 +75,14 @@ func TestUntar_WithLinks(t *testing.T) {
 	})
 
 	t.Run("hard links", func(t *testing.T) {
-		_, err := os.Stat(filepath.Join(dir, "testdata", "hardlink"))
+		_, err := os.Stat(filepath.Join(dir, "hardlink"))
 		if err != nil {
 			t.Fatalf("unexpected error: %+v", err)
 		}
 	})
 
 	t.Run("symlinks", func(t *testing.T) {
-		_, err := os.Stat(filepath.Join(dir, "testdata", "symlink"))
+		_, err := os.Stat(filepath.Join(dir, "symlink"))
 		if err != nil {
 			t.Fatalf("unexpected error: %+v", err)
 		}
