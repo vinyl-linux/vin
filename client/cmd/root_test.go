@@ -55,6 +55,7 @@ func TestRootCmd(t *testing.T) {
 		{"no args", []string{}, defaultExpect, false},
 		{"install, missing arg", []string{"install"}, defaultInstall, true},
 		{"install, error connecting to vind", []string{"install", "foo"}, "", true},
+		{"install multiple packages, error connecting to vind", []string{"install", "foo", "bar", "baz"}, "", true},
 		{"reload, error connecting to vind", []string{"reload"}, defaultReload, true},
 		{"reload, error connecting to vind", []string{"version"}, defaultReload, true},
 	} {
