@@ -44,25 +44,27 @@ var (
 
 // installCmd represents the install command
 var installCmd = &cobra.Command{
-	Use:   "install [package name]",
-	Short: "install packages",
-	Long:  `install packages`,
+	Use:   "install [package name] | [package name] [package name]",
+	Short: "install package(s)",
+	Long:  `install package(s)`,
 	Args: func(cmd *cobra.Command, args []string) error {
 		argCount := len(args)
 
-		if argCount != 1 {
+		if argCount == 0 {
 			cmd.Usage()
 
-			if argCount == 0 {
-				return fmt.Errorf("missing package")
-			}
+			return fmt.Errorf("missing package(s)")
+		}
 
-			return fmt.Errorf("install requires one package, received %d", argCount)
+		if argCount > 1 && version != "" {
+			cmd.Usage()
+
+			return fmt.Errorf("setting version with multiple packages makes no sense")
 		}
 
 		return nil
 	},
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, args []string) (err error) {
 		client, err := newClient(socketAddr)
 
 		err = errWrap("connecting to vin", err)
@@ -70,7 +72,14 @@ var installCmd = &cobra.Command{
 			return err
 		}
 
-		return errWrap("installation", client.install(args[0], version, force))
+		for _, pkg := range args {
+			err = client.install(pkg, version, force)
+			if err != nil {
+				break
+			}
+		}
+
+		return errWrap("installation", err)
 	},
 }
 
