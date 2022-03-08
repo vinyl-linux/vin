@@ -56,7 +56,7 @@ var installCmd = &cobra.Command{
 			return fmt.Errorf("missing package(s)")
 		}
 
-		if argCount > 1 && version != "" {
+		if argCount > 1 && (version != "" || version != "latest") {
 			cmd.Usage()
 
 			return fmt.Errorf("setting version with multiple packages makes no sense")
