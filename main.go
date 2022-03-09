@@ -7,7 +7,6 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"github.com/grpc-ecosystem/go-grpc-middleware/tags"
-	"github.com/vinyl-linux/vin/config"
 	"github.com/vinyl-linux/vin/server"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -53,7 +52,7 @@ func Setup() *grpc.Server {
 	sugar.Info("starting")
 	sugar.Info("loading config")
 
-	c, err := config.Load(configFile)
+	err := loadConfig()
 	if err != nil {
 		sugar.Panic(err)
 	}
@@ -77,7 +76,7 @@ func Setup() *grpc.Server {
 	sugar.Info("loaded")
 	sugar.Info("starting server")
 
-	s, err := NewServer(c, mdb, sdb)
+	s, err := NewServer(mdb, sdb)
 	if err != nil {
 		sugar.Panic(err)
 	}

@@ -22,7 +22,7 @@ func TestReadManifest(t *testing.T) {
 	}{
 		{"valid vin manifest", "vin", "0.0.0-rc0", Manifest{ID: "vin 0.0.0-rc0", Provides: "vin", VersionStr: "0.0.0-rc0", Licence: "BSD3", Tarball: "https://github.com/vinyl-linux/vin/archive/0.0.0-rc0.tar.gz", ManifestDir: "testdata/manifests/vin/0.0.0-rc0", Profiles: map[string]Profile{"default": {Deps: []Dep{{"go", ">= 1.12"}}}}, Commands: Commands{Configure: strP("true"), Compile: strP("make"), Install: strP("make install"), Patches: []string(nil)}}, false},
 		{"missing manifest", "unknown", "0", Manifest{}, true},
-		{"invalid manifest", "invalid", "0.1.0", Manifest{}, true},
+		{"invalid manifest", "invalid", "0.1.0", Manifest{Provides: "invalid"}, true},
 		{"invalid dep", "invalid", "0.1.1", Manifest{ID: "invalid 0.1.1", Provides: "invalid", VersionStr: "0.1.1", ManifestDir: "testdata/manifests/invalid/0.1.1", Profiles: map[string]Profile{"default": {Deps: []Dep{{"bash", "xxx"}}}}, Commands: Commands{Patches: []string(nil)}}, true},
 		{"manifest with patches", "patched", "0.0.1", Manifest{ID: "patched 0.0.1", Provides: "patched", VersionStr: "0.0.1", ManifestDir: "testdata/manifests/patched/0.0.1", Commands: Commands{Patches: []string{"testdata/manifests/patched/0.0.1/0.patch"}}}, false},
 	} {
@@ -31,16 +31,15 @@ func TestReadManifest(t *testing.T) {
 
 			if err == nil && test.expectError {
 				t.Error("expected error, received none")
-			} else if err != nil {
-				if !test.expectError {
-					t.Errorf("unexpected error: %+v", err)
-				} else {
-					t.Logf("received error: %+v", err)
-				}
+			} else if err != nil && !test.expectError {
+				t.Errorf("unexpected error: %+v", err)
 			}
 
-			// Remove Version pointer to make testing easier
+			// Remove anything with a pointer to aid testing
 			received.Version = nil
+			received.Commands.installationValues.Manifest = nil
+			received.Commands.absoluteWorkingDir = ""
+			received.dir = ""
 
 			if !reflect.DeepEqual(test.expect, received) {
 				t.Errorf("expected:\t\n%#v\nreceived:\t\n%#v", test.expect, received)
@@ -50,7 +49,12 @@ func TestReadManifest(t *testing.T) {
 }
 
 func TestManifest_Prepare(t *testing.T) {
-	cacheDir, _ = ioutil.TempDir("", "")
+	var err error
+
+	cacheDir, err = ioutil.TempDir("", "")
+	if err != nil {
+		t.Fatalf("unexpected error %#v", err)
+	}
 
 	man := Manifest{
 		Provides:   "test-package",
@@ -59,13 +63,18 @@ func TestManifest_Prepare(t *testing.T) {
 		VersionStr: "0.0.0-rc0",
 	}
 
+	man, err = processManifest(man)
+	if err != nil {
+		t.Fatalf("unexpected error: %#v", err)
+	}
+
 	output := make(chan string, 0)
 	go func() {
 		for _ = range output {
 		}
 	}()
 
-	err := man.Prepare(output)
+	err = man.Prepare(output)
 	if err != nil {
 		t.Errorf("unexpected error: %+v", err)
 	}
@@ -165,5 +174,41 @@ func TestManifests(t *testing.T) {
 		}
 
 		t.Errorf("expected %d services, received %d", expect, received)
+	}
+}
+
+func TestCommands_Initialise(t *testing.T) {
+	cacheDir, _ = ioutil.TempDir("", "")
+
+	for _, test := range []struct {
+		name        string
+		workingDir  string
+		expectError bool
+	}{
+		{"Named dir does not error", "foo-1.0.0-wd", false},
+		{"Empty does not error", "", false},
+		{"Single dot does not erorr", ".", false},
+
+		{"Trying to break out fails", "..", true},
+		{"Trying to go past root fails", "../../../../../../..", true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			m := Manifest{
+				Provides:   "foo",
+				VersionStr: "1.0.0",
+				Commands: Commands{
+					WorkingDir: test.workingDir,
+				},
+			}
+
+			m, err := processManifest(m)
+			if err == nil && test.expectError {
+				t.Error("expected error, received none")
+			} else if err != nil && !test.expectError {
+				t.Errorf("unexpected error: %+v", err)
+			}
+
+			t.Log(m.Commands.absoluteWorkingDir)
+		})
 	}
 }

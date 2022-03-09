@@ -2,23 +2,22 @@ package main
 
 import (
 	"testing"
-
-	"github.com/vinyl-linux/vin/config"
 )
 
 func TestInstallationValues_Expand(t *testing.T) {
 	configFile = "testdata/test-config.toml"
 
-	c, err := config.Load(configFile)
+	err := loadConfig()
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
 	}
 
 	m := &Manifest{
 		ManifestDir: "/tmp/app/1.0.0/",
+		Commands: Commands{
+			installationValues: InstallationValues{Manifest: &Manifest{ManifestDir: "/tmp/app/1.0.0/"}},
+		},
 	}
-
-	ir := InstallationValues{c, m}
 
 	for _, test := range []struct {
 		name        string
@@ -33,7 +32,7 @@ func TestInstallationValues_Expand(t *testing.T) {
 		{"dodgy template", " {{ .HelloWorld }}", "", true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			got, err := ir.Expand(test.in)
+			got, err := m.Commands.installationValues.Expand(test.in)
 
 			if err == nil && test.expectError {
 				t.Error("expected error, received none")

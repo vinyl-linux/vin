@@ -16,7 +16,6 @@ import (
 	"strings"
 
 	"github.com/h2non/filetype"
-	"github.com/vinyl-linux/vin/config"
 	"github.com/zeebo/blake3"
 )
 
@@ -237,7 +236,7 @@ func decompressLoop(tr *tar.Reader, dest string) (err error) {
 	}
 }
 
-func execute(dir, command string, skipEnv bool, output chan string, c config.Config) (err error) {
+func execute(dir, command string, skipEnv bool, output chan string) (err error) {
 	cmdSlice := strings.Fields(command)
 
 	var args []string
@@ -256,7 +255,7 @@ func execute(dir, command string, skipEnv bool, output chan string, c config.Con
 
 	if !skipEnv {
 		cmd.Env = os.Environ()
-		cmd.Env = append(cmd.Env, fmt.Sprintf("CFLAGS=%s", c.CFlags), fmt.Sprintf("CXXFLAGS=%s", c.CXXFlags))
+		cmd.Env = append(cmd.Env, fmt.Sprintf("CFLAGS=%s", cfg.CFlags), fmt.Sprintf("CXXFLAGS=%s", cfg.CXXFlags))
 	}
 
 	outputWriter := ChanWriter(output)

@@ -1,16 +1,14 @@
 package main
 
 import (
-	_ "log"
-
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/hashicorp/go-version"
-	"github.com/pelletier/go-toml"
-	"github.com/vinyl-linux/vin/config"
+	"github.com/pelletier/go-toml/v2"
 )
 
 const (
@@ -106,8 +104,6 @@ func (m Manifest) String() string { return fmt.Sprintf("%s %s", m.Provides, m.Ve
 // It handles things like downloading and verifying tarballs, and subsequently untarring
 func (m *Manifest) Prepare(output chan string) (err error) {
 	// This function will download the Manifest Tarball, checksum it, un-tar it, and so on.
-
-	m.dir = filepath.Join(cacheDir, m.Provides, m.VersionStr)
 	err = os.MkdirAll(m.dir, 0755)
 	if err != nil {
 		return
@@ -171,6 +167,33 @@ type Commands struct {
 	WorkingDir string
 	Patches    []string
 	Skipenv    bool
+	Finaliser  string
+
+	installationValues InstallationValues
+	absoluteWorkingDir string
+}
+
+func (c *Commands) Initialise(m Manifest) (err error) {
+	c.installationValues = InstallationValues{Manifest: &m}
+
+	// Do our best to ensure that workdirs are within the correct
+	// tree, free of symlinks, and resolvable.
+	//
+	// This wont solve dodgy packages with symlinks blatting things
+	// away, but it'll help stop install scripts breaking things;
+	// certainly accidentally.
+	//
+	// We're doing some pretty unsophisticated strings matching, purely
+	// because we control directory names ourselves, which means we're
+	// always in control of case sensitivity and so on
+	c.absoluteWorkingDir = filepath.Clean(filepath.Join(m.dir, c.WorkingDir))
+	if !strings.HasPrefix(c.absoluteWorkingDir, m.dir) {
+		return fmt.Errorf("working dir %s resolves to outside the cache dir %s to %s",
+			c.WorkingDir, m.dir, c.absoluteWorkingDir,
+		)
+	}
+
+	return
 }
 
 // Slice returns each command in an ordered slice
@@ -232,7 +255,7 @@ func (c Commands) Patch(wd string, output chan string) (err error) {
 		patchCmd := fmt.Sprintf("patch -p1 -i %s", p)
 
 		output <- fmt.Sprintf("patch %d/%d", i+1, patches)
-		err = execute(wd, patchCmd, c.Skipenv, output, config.Config{})
+		err = execute(wd, patchCmd, c.Skipenv, output)
 		if err != nil {
 			return
 		}
@@ -291,6 +314,13 @@ func readManifest(filename string) (m Manifest, err error) {
 
 func processManifest(m Manifest) (m1 Manifest, err error) {
 	m1 = m
+
+	m1.dir = filepath.Join(cacheDir, m.Provides, m.VersionStr)
+
+	err = m1.Commands.Initialise(m1)
+	if err != nil {
+		return
+	}
 
 	m1.Version, err = version.NewVersion(m.VersionStr)
 	if err != nil {

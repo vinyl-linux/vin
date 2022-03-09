@@ -8,6 +8,7 @@ service_directory = "99-sample-app"
 configure = "echo 'skipping'"
 compile = "echo 'skipping'"
 install = "echo 'skipping'"
+finaliser = "echo 'skipping'"
 
 [profiles]
 [profiles.default]    # All manifests need a default profile

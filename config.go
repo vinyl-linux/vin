@@ -7,9 +7,13 @@ import (
 	"github.com/vinyl-linux/vin/config"
 )
 
+var (
+	cfg config.Config
+)
+
 type InstallationValues struct {
-	config.Config
 	*Manifest
+	config.Config
 }
 
 // Expand takes a string (containing an ostensible template) and
@@ -28,12 +32,19 @@ func (c InstallationValues) Expand(s string) (cmd string, err error) {
 		return
 	}
 
+	c.Config = cfg
 	err = tmpl.Execute(b, c)
 	if err != nil {
 		return
 	}
 
 	cmd = b.String()
+
+	return
+}
+
+func loadConfig() (err error) {
+	cfg, err = config.Load(configFile)
 
 	return
 }

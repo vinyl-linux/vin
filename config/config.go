@@ -3,7 +3,7 @@ package config
 import (
 	"io/ioutil"
 
-	"github.com/pelletier/go-toml"
+	"github.com/pelletier/go-toml/v2"
 )
 
 // Config holds all of the configuration that vin needs,
