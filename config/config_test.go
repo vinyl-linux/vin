@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -23,18 +24,11 @@ func TestLoadConfig(t *testing.T) {
 	}
 }
 
-func TestConfig_String(t *testing.T) {
-	defer func() {
-		err := recover()
-		if err != nil {
-			t.Fatalf("unexpected error: %#v", err)
-		}
-	}()
-
-	c := Config{}.String()
-	expect := "CFLAGS = \"\"\nCXXFLAGS = \"\"\nMAKEOPTS = \"\"\nconfigure_flags = \"\"\n"
-
-	if expect != c {
-		t.Errorf("expected:\n%sreceived:\n%s", expect, c)
-	}
+func ExampleConfig_String() {
+	fmt.Println(Config{}.String())
+	// Output:
+	// configure_flags = ''
+	// MAKEOPTS = ''
+	// CFLAGS = ''
+	// CXXFLAGS = ''
 }
