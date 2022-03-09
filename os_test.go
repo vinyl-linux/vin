@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/vinyl-linux/vin/config"
 )
 
 func TestUntar(t *testing.T) {
@@ -112,7 +110,7 @@ func TestExecute(t *testing.T) {
 				}
 			}()
 
-			err := execute(test.dir, test.command, false, output, config.Config{})
+			err := execute(test.dir, test.command, false, output)
 			close(output)
 			if err == nil && test.expectError {
 				t.Errorf("expected error")

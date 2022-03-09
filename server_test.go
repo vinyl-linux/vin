@@ -7,7 +7,6 @@ import (
 
 	"github.com/gofrs/uuid"
 	"github.com/hashicorp/go-version"
-	"github.com/vinyl-linux/vin/config"
 	"github.com/vinyl-linux/vin/server"
 	"google.golang.org/grpc"
 )
@@ -29,7 +28,7 @@ func TestServer_Install(t *testing.T) {
 	cacheDir = "/tmp"
 	sockAddr = "/tmp/vin-test.sock"
 
-	c, err := config.Load(configFile)
+	err := loadConfig()
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
 	}
@@ -39,7 +38,7 @@ func TestServer_Install(t *testing.T) {
 		t.Fatalf("unexpected error: %+v", err)
 	}
 
-	s, err := NewServer(c, mdb, StateDB{})
+	s, err := NewServer(mdb, StateDB{})
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
 	}
@@ -93,7 +92,7 @@ func TestServer_Install_WithService(t *testing.T) {
 	sockAddr = "/tmp/vin-test.sock"
 	svcDir = "testdata/manifests-with-services/svcDir"
 
-	c, err := config.Load(configFile)
+	err := loadConfig()
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
 	}
@@ -103,7 +102,7 @@ func TestServer_Install_WithService(t *testing.T) {
 		t.Fatalf("unexpected error: %+v", err)
 	}
 
-	s, err := NewServer(c, mdb, StateDB{})
+	s, err := NewServer(mdb, StateDB{})
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
 	}
@@ -131,7 +130,7 @@ func TestServer_Reload(t *testing.T) {
 	sockAddr = "/tmp/vin-test.sock"
 	stateDB = filepath.Join("/tmp", uuid.Must(uuid.NewV4()).String())
 
-	c, err := config.Load(configFile)
+	err := loadConfig()
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
 	}
@@ -141,7 +140,7 @@ func TestServer_Reload(t *testing.T) {
 		t.Fatalf("unexpected error: %+v", err)
 	}
 
-	s, err := NewServer(c, mdb, StateDB{})
+	s, err := NewServer(mdb, StateDB{})
 	if err != nil {
 		t.Fatalf("unexpected error: %+v", err)
 	}

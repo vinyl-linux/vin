@@ -22,8 +22,11 @@ func TestStateDB_Manifest(t *testing.T) {
 
 	got, err := s.Meta()
 	got.Version = nil
+	got.Commands.installationValues = InstallationValues{}
+	got.Commands.absoluteWorkingDir = ""
+	got.dir = ""
 
 	if !reflect.DeepEqual(expect, got) {
-		t.Errorf("expected %#v, recveived %#v", expect, got)
+		t.Errorf("expected\n%#v\n\nrecveived\n%#v", expect, got)
 	}
 }

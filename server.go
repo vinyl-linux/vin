@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-version"
-	"github.com/vinyl-linux/vin/config"
 	"github.com/vinyl-linux/vin/server"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -21,18 +20,16 @@ const (
 type Server struct {
 	server.UnimplementedVinServer
 
-	sdb    StateDB
-	config config.Config
-	mdb    ManifestDB
+	sdb StateDB
+	mdb ManifestDB
 
 	operationLock *sync.Mutex
 }
 
-func NewServer(c config.Config, m ManifestDB, sdb StateDB) (s Server, err error) {
+func NewServer(m ManifestDB, sdb StateDB) (s Server, err error) {
 	return Server{
 		UnimplementedVinServer: server.UnimplementedVinServer{},
 		sdb:                    sdb,
-		config:                 c,
 		mdb:                    m,
 		operationLock:          &sync.Mutex{},
 	}, nil
@@ -97,6 +94,9 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 	// Write world db to disk on return
 	defer s.sdb.Write()
 
+	// Store finaliser commands
+	finalisers := make([]*Manifest, 0)
+
 	// for each pkg
 	for _, task := range tasks {
 		output.Prefix = task.ID
@@ -118,21 +118,18 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 			return
 		}
 
-		iv := InstallationValues{s.config, task}
-		workDir := filepath.Join(task.dir, task.Commands.WorkingDir)
-
-		err = task.Commands.Patch(workDir, output.C)
+		err = task.Commands.Patch(task.Commands.absoluteWorkingDir, output.C)
 		if err != nil {
 			return
 		}
 
 		for _, raw := range task.Commands.Slice() {
-			cmd, err = iv.Expand(raw)
+			cmd, err = task.Commands.installationValues.Expand(raw)
 			if err != nil {
 				return
 			}
 
-			err = execute(workDir, cmd, task.Commands.Skipenv, output.C, s.config)
+			err = execute(task.Commands.absoluteWorkingDir, cmd, task.Commands.Skipenv, output.C)
 			if err != nil {
 				return
 			}
@@ -146,7 +143,24 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 			}
 		}
 
+		if task.Commands.Finaliser != "" {
+			finalisers = append(finalisers, task)
+		}
+
 		s.sdb.AddInstalled(task.ID, time.Now())
+	}
+
+	for _, task := range finalisers {
+		var cmd string
+		cmd, err = task.Commands.installationValues.Expand(task.Commands.Finaliser)
+		if err != nil {
+			return
+		}
+
+		err = execute(task.Commands.absoluteWorkingDir, cmd, task.Commands.Skipenv, output.C)
+		if err != nil {
+			return
+		}
 	}
 
 	s.sdb.AddWorld(is.Pkg, is.Version)
