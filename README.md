@@ -25,6 +25,39 @@ The list goes on.
 
 It also uses blazing fast, nice and modern tooling. Downloads, for example, are checkum'd with https://github.com/BLAKE3-team/BLAKE3, which provides all kinds of lovely speed and security.
 
+## Special cases
+
+Not all packages download a tarball, perform some patch/build/installation steps, and complete. These are detailed here
+
+### Meta packages
+
+For packages whose only job is to include other packages as dependencies, such as [vinyl-0.1.0](https://github.com/vinyl-linux/vin-packages-stable/blob/main/vinyl/0.1.0/manifest.toml) from the stable repository.
+
+In this situation, simply omit tarball and checksum, setting `meta = true`.
+
+```toml
+provides = "vinyl"
+version = "0.1.0"
+meta = true
+
+[profiles]
+[profiles.default]
+deps = [
+     ["vinit", "=0.5.1"],
+     ["vin", "=0.9.0"],
+     ["linux-utils", "=0.1.1"],
+     ["vc", "=0.2.1"],
+]
+```
+
+### Service directory packages
+
+For packages which only include service directories for [`vinit`](https://github.com/vinyl-linux/vinit), use the tarball [https://github.com/vinyl-linux/vin/releases/download/0.10.0/empty.tar.gz](https://github.com/vinyl-linux/vin/releases/download/0.10.0/empty.tar/gz), which has the blake3 sum `3e767181b1a035d296bf393e35c65441bb0158141a0cfb51cf389b60ab01e8be`.
+
+This is an empty tarball of about 4kb, so should download and process pretty quickly.
+
+If this becomes too much of a faff later we can change the manifest spec to allow skipping tarballs.
+
 ## Testing
 
 This repo uses github actions to test both the main branch and changes to the main branch. To run tests manually, run
