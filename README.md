@@ -52,7 +52,7 @@ deps = [
 
 ### Service directory packages
 
-For packages which only include service directories for [`vinit`](https://github.com/vinyl-linux/vinit), use the tarball [https://github.com/vinyl-linux/vin/releases/download/0.10.0/empty.tar.gz](https://github.com/vinyl-linux/vin/releases/download/0.10.0/empty.tar/gz), which has the blake3 sum `3e767181b1a035d296bf393e35c65441bb0158141a0cfb51cf389b60ab01e8be`.
+For packages which only include service directories for [`vinit`](https://github.com/vinyl-linux/vinit), use the tarball [https://github.com/vinyl-linux/vin/releases/download/0.10.1/empty.tar.gz](https://github.com/vinyl-linux/vin/releases/download/0.10.1/empty.tar/gz), which has the blake3 sum `3e767181b1a035d296bf393e35c65441bb0158141a0cfb51cf389b60ab01e8be`.
 
 This is an empty tarball of about 4kb, so should download and process pretty quickly.
 
