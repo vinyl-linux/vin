@@ -309,7 +309,12 @@ func readManifest(filename string) (m Manifest, err error) {
 
 	m.ManifestDir = filepath.Dir(filename)
 
-	return processManifest(m)
+	m, err = processManifest(m)
+	if err != nil {
+		err = fmt.Errorf("%s: %w", filename, err)
+	}
+
+	return
 }
 
 func processManifest(m Manifest) (m1 Manifest, err error) {
@@ -324,6 +329,8 @@ func processManifest(m Manifest) (m1 Manifest, err error) {
 
 	m1.Version, err = version.NewVersion(m.VersionStr)
 	if err != nil {
+		err = fmt.Errorf("%s : %w", m1.Provides, err)
+
 		return
 	}
 
