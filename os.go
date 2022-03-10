@@ -275,7 +275,7 @@ func installServiceDir(src string) (err error) {
 		dst := filepath.Join(svcDir, filepath.Base(src), name)
 
 		if info.IsDir() {
-			return os.MkdirAll(dst, 0700)
+			return os.MkdirAll(dst, info.Mode())
 		}
 
 		if info.Mode()&os.ModeSymlink == os.ModeSymlink {
@@ -295,7 +295,7 @@ func installServiceDir(src string) (err error) {
 			return os.Symlink(l, dst)
 		}
 
-		source, err := os.Open(path)
+		source, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, info.Mode())
 		if err != nil {
 			return err
 		}
