@@ -226,6 +226,8 @@ func (s Server) Version(ctx context.Context, _ *emptypb.Empty) (v *server.Versio
 }
 
 func (s Server) createMetaPackage(packages []string) (err error) {
+	var pm *Manifest
+
 	// create a new 'meta package'
 	deps := make([]Dep, len(packages))
 	for i, p := range packages {
@@ -233,7 +235,12 @@ func (s Server) createMetaPackage(packages []string) (err error) {
 			return errEmptyPackage
 		}
 
-		deps[i] = [2]string{p, ">=0"}
+		pm, err = s.mdb.Latest(p, latest)
+		if err != nil {
+			return
+		}
+
+		deps[i] = [2]string{pm.Provides, pm.Version.String()}
 	}
 
 	metaManifest := &Manifest{
