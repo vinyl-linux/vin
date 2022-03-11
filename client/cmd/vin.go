@@ -63,9 +63,9 @@ func parseAddr(addr string) (s string, err error) {
 	return u.String(), nil
 }
 
-func (c client) install(pkg, version string, force bool) (err error) {
+func (c client) install(pkgs []string, version string, force bool) (err error) {
 	is := &vin.InstallSpec{
-		Pkg:   pkg,
+		Pkg:   pkgs,
 		Force: force,
 	}
 
