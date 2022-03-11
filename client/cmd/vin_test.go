@@ -115,20 +115,20 @@ func (c *dummyInstallClient) getOutput() []string           { return c.output }
 func TestClient_Install(t *testing.T) {
 	for _, test := range []struct {
 		name         string
-		pkg          string
+		pkg          []string
 		ver          string
 		client       DummyVinClient
 		expectSpec   *vin.InstallSpec
 		expectOutput []string
 		expectError  bool
 	}{
-		{"valid package, 'latest' version", "foo", "latest", &dummyInstallClient{}, &vin.InstallSpec{Pkg: "foo"}, []string{}, false},
-		{"valid package, empty version", "foo", "", &dummyInstallClient{}, &vin.InstallSpec{Pkg: "foo"}, []string{}, false},
-		{"valid package, set version", "foo", "1.0.0", &dummyInstallClient{}, &vin.InstallSpec{Pkg: "foo", Version: "1.0.0"}, []string{}, false},
-		{"valid package, 'latest' version, output", "foo", "latest", &dummyInstallClient{output: []string{"line-1", "line-2"}}, &vin.InstallSpec{Pkg: "foo"}, []string{"line-1", "line-2"}, false},
+		{"valid package, 'latest' version", []string{"foo"}, "latest", &dummyInstallClient{}, &vin.InstallSpec{Pkg: []string{"foo"}}, []string{}, false},
+		{"valid package, empty version", []string{"foo"}, "", &dummyInstallClient{}, &vin.InstallSpec{Pkg: []string{"foo"}}, []string{}, false},
+		{"valid package, set version", []string{"foo"}, "1.0.0", &dummyInstallClient{}, &vin.InstallSpec{Pkg: []string{"foo"}, Version: "1.0.0"}, []string{}, false},
+		{"valid package, 'latest' version, output", []string{"foo"}, "latest", &dummyInstallClient{output: []string{"line-1", "line-2"}}, &vin.InstallSpec{Pkg: []string{"foo"}}, []string{"line-1", "line-2"}, false},
 
-		{"vind throws error", "foo", "1.0.0", &dummyInstallClient{err: true}, &vin.InstallSpec{Pkg: "foo", Version: "1.0.0"}, []string{}, true},
-		{"vind stream error", "foo", "1.0.0", &dummyInstallClient{recvErr: true}, &vin.InstallSpec{Pkg: "foo", Version: "1.0.0"}, []string{}, true},
+		{"vind throws error", []string{"foo"}, "1.0.0", &dummyInstallClient{err: true}, &vin.InstallSpec{Pkg: []string{"foo"}, Version: "1.0.0"}, []string{}, true},
+		{"vind stream error", []string{"foo"}, "1.0.0", &dummyInstallClient{recvErr: true}, &vin.InstallSpec{Pkg: []string{"foo"}, Version: "1.0.0"}, []string{}, true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			c := client{c: test.client}

@@ -9,7 +9,7 @@ package server;
 //
 // InstallSpec messages are sent via `vin install package [-v 1.0.0]`
 message InstallSpec {
-  string pkg = 1;
+  repeated string pkg = 1;
   string version = 2;
   bool force = 3;
 }

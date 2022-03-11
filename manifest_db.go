@@ -122,7 +122,7 @@ func (d *ManifestDB) loadManifests() (err error) {
 	}
 
 	for _, manifest := range manifests {
-		err = tx.Insert("package", manifest)
+		err = d.addManifest(tx, manifest)
 		if err != nil {
 			return
 		}
@@ -131,4 +131,20 @@ func (d *ManifestDB) loadManifests() (err error) {
 	tx.Commit()
 
 	return
+}
+
+func (d *ManifestDB) addManifest(tx *memdb.Txn, manifest *Manifest) error {
+	return tx.Insert("package", manifest)
+}
+
+func (d *ManifestDB) deleteManifest(name string) (err error) {
+	m, err := d.Latest(name, latest)
+	if err != nil {
+		return
+	}
+
+	tx := d.db.Txn(true)
+	defer tx.Commit()
+
+	return tx.Delete("package", m)
 }

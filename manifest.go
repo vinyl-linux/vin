@@ -26,6 +26,10 @@ const (
 	// DefaultInstall is the command used to configure packages
 	// where a configure command is not provided
 	DefaultInstall = "make install {{ .MakeOpts }}"
+
+	// MetaManifestName is the name of the dummy manifest we use
+	// when installing multiple package at once
+	MetaManifestName = "packages"
 )
 
 // Dep represents a dependency tuple.

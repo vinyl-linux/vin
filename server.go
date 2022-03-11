@@ -55,8 +55,38 @@ func (s *Server) getOpsLock(oc chan string) {
 }
 
 func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (err error) {
-	if is.Pkg == "" {
+	var (
+		pkg string
+		ver version.Constraints
+	)
+
+	switch len(is.Pkg) {
+	case 0:
 		return fmt.Errorf("package must not be empty")
+
+	case 1:
+		pkg = is.Pkg[0]
+		if pkg == "" {
+			return fmt.Errorf("package must not be empty")
+		}
+
+		if is.Version != "" {
+			ver, err = version.NewConstraint(is.Version)
+			if err != nil {
+				return
+			}
+		}
+
+	default:
+		err = s.createMetaPackage(is.Pkg)
+		if err != nil {
+			return err
+		}
+
+		pkg = MetaManifestName
+		ver = latest
+
+		defer s.mdb.deleteManifest(pkg)
 	}
 
 	output := NewOutputter(vs)
@@ -65,22 +95,13 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 	defer close(output.C)
 	go output.Dispatch()
 
-	output.C <- fmt.Sprintf("installing %s", is.Pkg)
+	output.C <- fmt.Sprintf("installing %s", pkg)
 
 	s.getOpsLock(output.C)
 	defer s.operationLock.Unlock()
 
-	var ver version.Constraints
-
-	if is.Version != "" {
-		ver, err = version.NewConstraint(is.Version)
-		if err != nil {
-			return
-		}
-	}
-
 	g := NewGraph(&s.mdb, &s.sdb, output.C)
-	tasks, err := g.Solve(DefaultProfile, is.Pkg, ver)
+	tasks, err := g.Solve(DefaultProfile, pkg, ver)
 	if err != nil {
 		return
 	}
@@ -163,7 +184,9 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 		}
 	}
 
-	s.sdb.AddWorld(is.Pkg, is.Version)
+	if pkg != MetaManifestName {
+		s.sdb.AddWorld(pkg, is.Version)
+	}
 
 	return
 }
@@ -194,6 +217,37 @@ func (s Server) Version(ctx context.Context, _ *emptypb.Empty) (v *server.Versio
 		BuildUser: buildUser,
 		BuiltOn:   builtOn,
 	}, nil
+}
+
+func (s Server) createMetaPackage(packages []string) (err error) {
+	// create a new 'meta package'
+	deps := make([]Dep, len(packages))
+	for i, p := range packages {
+		if p == "" {
+			return fmt.Errorf("package must not be empty")
+		}
+
+		deps[i] = [2]string{p, ">=0"}
+	}
+
+	metaManifest := &Manifest{
+		Provides: MetaManifestName,
+		Version:  new(version.Version),
+		Meta:     true,
+		Profiles: map[string]Profile{
+			"default": Profile{
+				Deps: deps,
+			},
+		},
+	}
+
+	metaManifest.ID = metaManifest.String()
+
+	// add metaManifest to database
+	tx := s.mdb.db.Txn(true)
+	defer tx.Commit()
+
+	return s.mdb.addManifest(tx, metaManifest)
 }
 
 func installingLine(tasks []*Manifest) string {

@@ -45,21 +45,24 @@ func TestServer_Install(t *testing.T) {
 
 	for _, test := range []struct {
 		name        string
-		pkg         string
+		pkg         []string
 		ver         string
 		expectError bool
 	}{
-		{"valid package, explicit version", "standalone", "1.0.0", false},
-		{"valid package, empty version", "standalone", "", false},
-		{"valid package, missing version", "standalone", "> 2.0.0", true},
-		{"invalid package", "foo", "", true},
-		{"valid package, invalid version", "standalone", "zzzzz", true},
-		{"valid package, bad checksum", "standalone", "0.1.1", true},
-		{"valid package, bad command template", "standalone", "0.1.2", true},
-		{"valid package, 404 archive", "standalone", "0.1.3", true},
-		{"erroring commands", "standalone", "0.1.0", true},
-		{"missing package", "", "", true},
-		{"meta package", "metaz", "", false},
+		{"valid package, explicit version", []string{"standalone"}, "1.0.0", false},
+		{"valid package, empty version", []string{"standalone"}, "", false},
+		{"valid package, missing version", []string{"standalone"}, "> 2.0.0", true},
+		{"invalid package", []string{"foo"}, "", true},
+		{"valid package, invalid version", []string{"standalone"}, "zzzzz", true},
+		{"valid package, bad checksum", []string{"standalone"}, "0.1.1", true},
+		{"valid package, bad command template", []string{"standalone"}, "0.1.2", true},
+		{"valid package, 404 archive", []string{"standalone"}, "0.1.3", true},
+		{"erroring commands", []string{"standalone"}, "0.1.0", true},
+		{"missing package", []string{}, "", true},
+		{"empty package", []string{""}, "", true},
+		{"multiple empty packages", []string{"", ""}, "", true},
+		{"multiple valid packages", []string{"standalone", "metaz"}, "", false},
+		{"meta package", []string{"metaz"}, "", false},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			// create an empty statedb
@@ -111,7 +114,7 @@ func TestServer_Install_WithService(t *testing.T) {
 	s.sdb, _ = LoadStateDB()
 
 	is := &server.InstallSpec{
-		Pkg:     "another-sample-app",
+		Pkg:     []string{"another-sample-app"},
 		Version: "",
 	}
 

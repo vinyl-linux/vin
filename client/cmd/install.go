@@ -56,12 +56,6 @@ var installCmd = &cobra.Command{
 			return fmt.Errorf("missing package(s)")
 		}
 
-		if argCount > 1 && (version != "" && version != "latest") {
-			cmd.Usage()
-
-			return fmt.Errorf("setting version with multiple packages makes no sense")
-		}
-
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) (err error) {
@@ -72,12 +66,7 @@ var installCmd = &cobra.Command{
 			return err
 		}
 
-		for _, pkg := range args {
-			err = client.install(pkg, version, force)
-			if err != nil {
-				break
-			}
-		}
+		err = client.install(args, version, force)
 
 		return errWrap("installation", err)
 	},
