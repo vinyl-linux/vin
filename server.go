@@ -10,11 +10,17 @@ import (
 
 	"github.com/hashicorp/go-version"
 	"github.com/vinyl-linux/vin/server"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const (
 	DefaultProfile = "default"
+)
+
+var (
+	errEmptyPackage = status.Error(codes.InvalidArgument, "package must not be empty")
 )
 
 type Server struct {
@@ -62,12 +68,12 @@ func (s Server) Install(is *server.InstallSpec, vs server.Vin_InstallServer) (er
 
 	switch len(is.Pkg) {
 	case 0:
-		return fmt.Errorf("package must not be empty")
+		return errEmptyPackage
 
 	case 1:
 		pkg = is.Pkg[0]
 		if pkg == "" {
-			return fmt.Errorf("package must not be empty")
+			return errEmptyPackage
 		}
 
 		if is.Version != "" {
@@ -224,7 +230,7 @@ func (s Server) createMetaPackage(packages []string) (err error) {
 	deps := make([]Dep, len(packages))
 	for i, p := range packages {
 		if p == "" {
-			return fmt.Errorf("package must not be empty")
+			return errEmptyPackage
 		}
 
 		deps[i] = [2]string{p, ">=0"}
