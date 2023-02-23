@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -93,7 +94,9 @@ func TestServer_Install_WithService(t *testing.T) {
 	configFile = "testdata/test-config.toml"
 	cacheDir = "/tmp"
 	sockAddr = "/tmp/vin-test.sock"
-	svcDir = "testdata/manifests-with-services/svcDir"
+
+	svcDir, _ = os.MkdirTemp("", "")
+	t.Logf(svcDir)
 
 	err := loadConfig()
 	if err != nil {

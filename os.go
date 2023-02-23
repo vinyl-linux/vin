@@ -295,13 +295,13 @@ func installServiceDir(src string) (err error) {
 			return os.Symlink(l, dst)
 		}
 
-		source, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, info.Mode())
+		source, err := os.Open(path)
 		if err != nil {
 			return err
 		}
 		defer source.Close()
 
-		destination, err := os.Create(dst)
+		destination, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE, info.Mode())
 		if err != nil {
 			return err
 		}
